@@ -1,5 +1,8 @@
 sources/.vscode/
+.vscode
 sources/__pycache__/
 sources/data/
 *.pyc
 *.log
+*.lock
+config.py

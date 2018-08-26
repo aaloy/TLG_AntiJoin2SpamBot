@@ -1,5 +1,7 @@
 # TLG_AntiJoin2SpamBot
 
+THIS IS WORK IN PROGRESS, please use the original repo
+
 Telegram Bot that figth against the spammer users that join groups to spam their annoying and unwanted info.
 
 -------------------------------------------------------------------------------------------------------------------------

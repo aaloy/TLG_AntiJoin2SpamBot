@@ -1,45 +1,48 @@
-#/usr/bin/python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
+
 '''
 Script:
-    Anti_Join2Spam_Bot.py
+    anti_join2spam_bot.py
 Description:
     Telegram Bot that figths against the spammer users that join groups to publish their annoying 
     and unwanted info.
 Author:
     Jose Rios Rubio
+    Branch: aaloy
 Creation date:
     04/04/2018
 Last modified date:
-    12/08/2018
+    26/08/2018
 Version:
-    1.7.0
+    1.7.1 - Pep8 compliance
 '''
 
 ####################################################################################################
 
-### Imported modules ###
+# Imported modules
+
 import re
 import sys
 import signal
-import TSjson
+import tsjson
 from os import path, makedirs, listdir
-from datetime import datetime, timedelta
-from time import time, sleep, strptime, mktime, strftime
-from threading import Thread, Lock
-from Constants import CONST, TEXT
-from operator import itemgetter
+from datetime import datetime
+from time import time, sleep, strptime, mktime
+from constants import CONST, TEXT
 from collections import OrderedDict
 from telegram import MessageEntity, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, RegexHandler, \
                          ConversationHandler, CallbackQueryHandler
+
+import logging
 
 ####################################################################################################
 
 ### Debug Flag ###
 DEBUG = False
 
-### Globals ###
+# Globals ###
 files_users_list = []
 files_messages_list = []
 files_config_list = []
@@ -47,12 +50,14 @@ to_delete_messages_list = []
 sent_antispam_messages_list = []
 owner_notify = False
 
+log = logging.getLogger(__name__)
+
 ####################################################################################################
 
-### Termination signals handler for program process ###
+
 def signal_handler(signal, frame):
     '''Termination signals (SIGINT, SIGTERM) handler for program process'''
-    debug_print("Closing the program, safe way...")
+    log.info('Closing the bot ...')
     # Acquire all messages and users files mutex to ensure not read/write operation on them
     for chat_users_file in files_users_list:
         chat_users_file['File'].lock.acquire()
@@ -61,16 +66,17 @@ def signal_handler(signal, frame):
     for chat_config_file in files_config_list:
         chat_config_file['File'].lock.acquire()
     # Close the program
-    sys.exit(0)
+    sys.exit(1)
 
 
-### Signals attachment ###
+# Signals attachment ###
 signal.signal(signal.SIGTERM, signal_handler) # SIGTERM (kill pid) to signal_handler
 signal.signal(signal.SIGINT, signal_handler)  # SIGINT (Ctrl+C) to signal_handler
 
 ####################################################################################################
 
-### Debug print ###
+# Debug print ###
+
 
 def debug_print(text):
     '''Function to print text just when DEBUG flag is active'''
@@ -89,7 +95,8 @@ def debug_print_tlg(bot, text):
 
 ####################################################################################################
 
-### General functions ###
+# General functions 
+
 
 def initialize_resources():
     '''Initialize resources by populating files list with chats found files'''
@@ -104,15 +111,15 @@ def initialize_resources():
                 # Populate users files list
                 file_path = '{}/{}/{}'.format(CONST['DATA_DIR'], f_chat_id, CONST['F_USERS'])
                 files_users_list.append(OrderedDict([('ID', f_chat_id), \
-                    ('File', TSjson.TSjson(file_path))]))
+                    ('File', tsjson.TSjson(file_path))]))
                 # Populate messages files list
                 file_path = '{}/{}/{}'.format(CONST['DATA_DIR'], f_chat_id, CONST['F_MSG'])
                 files_messages_list.append(OrderedDict([('ID', f_chat_id), \
-                    ('File', TSjson.TSjson(file_path))]))
+                    ('File', tsjson.TSjson(file_path))]))
                 # Populate config files list
                 file_path = '{}/{}/{}'.format(CONST['DATA_DIR'], f_chat_id, CONST['F_CONF'])
                 files_config_list.append(OrderedDict([('ID', f_chat_id), \
-                    ('File', TSjson.TSjson(file_path))]))
+                    ('File', tsjson.TSjson(file_path))]))
                 # Create default configuration file if it does not exists
                 if not path.exists(file_path):
                     default_conf = get_default_config_data()
@@ -133,12 +140,12 @@ def get_chat_users_file(chat_id):
         if not found:
             chat_users_file_name = '{}/{}/{}'.format(CONST['DATA_DIR'], chat_id, CONST['F_USERS'])
             file['ID'] = chat_id
-            file['File'] = TSjson.TSjson(chat_users_file_name)
+            file['File'] = tsjson.TSjson(chat_users_file_name)
             files_users_list.append(file)
     else:
         chat_users_file_name = '{}/{}/{}'.format(CONST['DATA_DIR'], chat_id, CONST['F_USERS'])
         file['ID'] = chat_id
-        file['File'] = TSjson.TSjson(chat_users_file_name)
+        file['File'] = tsjson.TSjson(chat_users_file_name)
         files_users_list.append(file)
     return file['File']
 
@@ -155,17 +162,18 @@ def get_chat_messages_file(chat_id):
                 break
         if not found:
             chat_messages_file_name = '{}/{}/{}'.format(CONST['DATA_DIR'], chat_id, CONST['F_MSG'])
-            file['File'] = TSjson.TSjson(chat_messages_file_name)
+            file['File'] = tsjson.TSjson(chat_messages_file_name)
             files_messages_list.append(file)
     else:
         chat_messages_file_name = '{}/{}/{}'.format(CONST['DATA_DIR'], chat_id, CONST['F_MSG'])
-        file['File'] = TSjson.TSjson(chat_messages_file_name)
+        file['File'] = tsjson.TSjson(chat_messages_file_name)
         files_messages_list.append(file)
     return file['File']
 
 
 def get_chat_config_file(chat_id):
-    '''Determine chat config file from the list by ID. Get the file if exists or create it if not'''
+    '''Determine chat config file from the list by ID. Get the file 
+    if exists or create it if not'''
     file = OrderedDict([('ID', chat_id), ('File', None)])
     found = False
     if files_config_list:
@@ -177,12 +185,12 @@ def get_chat_config_file(chat_id):
         if not found:
             chat_config_file_name = '{}/{}/{}'.format(CONST['DATA_DIR'], chat_id, CONST['F_CONF'])
             file['ID'] = chat_id
-            file['File'] = TSjson.TSjson(chat_config_file_name)
+            file['File'] = tsjson.TSjson(chat_config_file_name)
             files_config_list.append(file)
     else:
         chat_config_file_name = '{}/{}/{}'.format(CONST['DATA_DIR'], chat_id, CONST['F_CONF'])
         file['ID'] = chat_id
-        file['File'] = TSjson.TSjson(chat_config_file_name)
+        file['File'] = tsjson.TSjson(chat_config_file_name)
         files_config_list.append(file)
     return file['File']
 
@@ -1183,9 +1191,15 @@ def main():
     updater.start_polling(clean=True)
     # Handle self-messages delete
     selfdestruct_messages(updater.bot)
-
+    # Allow bot stop
+    updater.idle()
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
+    log.info("Bot Starting ...")
     main()
 
 ### End Of Code ###
