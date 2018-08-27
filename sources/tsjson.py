@@ -48,6 +48,7 @@ class TSjson(object):
         """Creates the lock engine"""
         self.lock = FileLock("{}.lock".format(file_name))
         self.file_name = file_name
+        self._ensure_dir()
 
     def read(self):
         """Reads a json file in thread safe mode and puts its contents in
@@ -68,9 +69,9 @@ class TSjson(object):
 
     def _ensure_dir(self):
         """Ensures that the directory exists"""
-        directory = Path(self.file_name)
-        if not directory.parent.exists():
-            directory.mkdir(parents=True, exist_ok=True)
+        arx = Path(self.file_name)
+        if not arx.parent.exists():
+            arx.parent.mkdir(parents=True, exist_ok=True)
 
     def write(self, data):
         """Writes the json file to disk"""
@@ -89,15 +90,37 @@ class TSjson(object):
             )
 
     def read_content(self):
-        """Funcion para leer el contenido de un archivo json (datos json)"""
+        """Loads the file content's json to the OrderedDict"""
         read = self.read()
-        if read != {}:
+        if read != OrderedDict():
             return read["Content"]
         else:
             return read
 
+    def update(self, data, uide):
+        """
+        Funcion para actualizar datos de un archivo json
+        [Nota: Cada dato json necesita al menos 1 elemento identificador unico 
+        (uide), si no es asi, la actualizacion se producira en el primer dato 
+        con dicho elemento uide que se encuentre]
+        """
+        file_data = self.read()  # Leer todo el archivo json
+        # Buscar la posicion del dato en el contenido json
+        found = 0
+        i = 0
+        for msg in file_data["Content"]:  # Para cada dato json en el archivo json
+            if data[uide] == msg[uide]:  # Si el dato json tiene el UIDE buscado
+                found = 1  # Marcar que se ha encontrado la posicion
+                break  # Interrumpir y salir del bucle
+            i = i + 1  # Incrementar la posicion del dato
+        if found:  # Si se encontro en el archivo json datos con el UIDE buscado
+            file_data["Content"][i] = data
+            self.write(file_data)  # Escribimos el dato actualizado en el archivo json
+        else:  # No se encontro ningun dato json con dicho UIDE
+            log.error("Error: UIDE no encontrado en el archivo, o el archivo no existe")
+
     def write_content(self, data):
-        """Funcion para añadir al contenido de un archivo json, nuevos datos json"""
+        """Saves the data to the file as json"""
         self._ensure_dir()
         try:  # Intentar abrir el archivo
             if data:
@@ -133,94 +156,6 @@ class TSjson(object):
         except ValueError:
             found = False
         return found, position
-
-    def remove_by_uide(self, element_value, uide):
-        """
-        Funcion para eliminar un dato json concreto dentro del archivo json a
-        partir de un elemento identificador unico (uide)
-        [Nota: Cada dato json necesita al menos 1 elemento identificador
-        unico (uide), si no es asi, la eliminacion se producira en el primer
-        dato con dicho elemento uide que se encuentre]"""
-        file_content = self.read_content()  # Leer el contenido del archivo json
-        for data in file_content:  # Para cada dato json contenido
-            if data[uide] == element_value:  # Si el dato coincide con el buscado
-                file_content.remove(data)  # Eliminamos el dato
-                break  # Interrumpir y salir del bucle
-        self.clear_content()  # Eliminamos el contenido del archivo
-        if file_content:  # Si hay algun dato en el contenido modificado
-            self.write_content(
-                file_content[0]
-            )  # Write the modified content (without the item)
-
-    def search_by_uide(self, element_value, uide):
-        """
-        Funcion para buscar un dato json concreto dentro del archivo json a
-        partir de un elemento identificador unico (uide)
-        [Nota: Cada dato json necesita al menos 1 elemento identificador unico
-        (uide), si no es asi, la actualizacion se producira en el primer dato
-        con dicho elemento uide que se encuentre]"""
-
-        result = dict()  # Diccionario para el resultado de la busqueda
-        result["found"] = False  # Dato inicialmente no encontrado
-        result["data"] = None  # Dato encontrado inicialmente con ningun valor
-        file_data = self.read()  # Leer todo el archivo json
-        for element in file_data["Content"]:  # Para cada elemento en el archivo json
-            if element:  # Si el contenido no esta vacio
-                if (
-                    element_value == element[uide]
-                ):  # Si el dato json tiene el UIDE buscado
-                    result["found"] = True  # Marcar que se ha encontrado la posicion
-                    result["data"] = element  # Obtenemos el dato encontrado
-                    break  # Interrumpir y salir del bucle
-        return result  # Devolver si se ha encontrado o no y el dato encontrado
-
-    def update(self, data, uide):
-        """
-        Funcion para actualizar datos de un archivo json
-        [Nota: Cada dato json necesita al menos 1 elemento identificador unico 
-        (uide), si no es asi, la actualizacion se producira en el primer dato 
-        con dicho elemento uide que se encuentre]
-        """
-        file_data = self.read()  # Leer todo el archivo json
-        # Buscar la posicion del dato en el contenido json
-        found = 0
-        i = 0
-        for msg in file_data["Content"]:  # Para cada dato json en el archivo json
-            if data[uide] == msg[uide]:  # Si el dato json tiene el UIDE buscado
-                found = 1  # Marcar que se ha encontrado la posicion
-                break  # Interrumpir y salir del bucle
-            i = i + 1  # Incrementar la posicion del dato
-        if found:  # Si se encontro en el archivo json datos con el UIDE buscado
-            file_data["Content"][i] = data
-            self.write(file_data)  # Escribimos el dato actualizado en el archivo json
-        else:  # No se encontro ningun dato json con dicho UIDE
-            log.error("Error: UIDE no encontrado en el archivo, o el archivo no existe")
-
-    def update_twice(self, data, uide1, uide2):
-        """
-        Funcion para actualizar datos de un archivo json
-        [Nota: Cada dato json necesita al menos 1 elemento identificador unico 
-        (uide), si no es asi, la actualizacion se producira en el primer 
-        elemento que se encuentre]
-        """
-        file_data = self.read()  # Leer todo el archivo json
-
-        # Buscar la posicion del dato en el contenido json
-        found = 0  # Posicion encontrada a 0
-        i = 0  # Posicion inicial del dato a 0
-        for msg in file_data["Content"]:  # Para cada dato json en el archivo json
-            if (data[uide1] == msg[uide1]) and (
-                data[uide2] == msg[uide2]
-            ):  # Si el dato json tiene el UIDE buscado
-                found = 1  # Marcar que se ha encontrado la posicion
-                break  # Interrumpir y salir del bucle
-            i = i + 1  # Incrementar la posicion del dato
-
-        if found:  # Si se encontro en el archivo json datos con el UIDE buscado
-            file_data["Content"][i] = data
-            self.write(file_data)
-        else:
-            log.error("Error: UIDE no encontrado en el archivo, o el archivo no existe")
 
     def clear_content(self):
         """Reset all data in json file to an empty dict"""

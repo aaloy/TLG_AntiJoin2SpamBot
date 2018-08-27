@@ -1,0 +1,4 @@
+# copy to config.py and update the configuration
+TELEGRAM_API_TOKEN = "THE TELEGRAM TOKEN"
+INIT_ALLOW_USERS_ADD_BOTS = False
+LOCK_TIMEOUT = 10

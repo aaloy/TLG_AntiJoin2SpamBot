@@ -9,7 +9,6 @@ filelock = "*"
 
 [dev-packages]
 pylint = "*"
-black = "*"
 ipdb = "*"
 ipython = "*"
 
