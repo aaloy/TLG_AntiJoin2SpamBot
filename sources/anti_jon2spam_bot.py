@@ -5,11 +5,12 @@
 Script:
     anti_join2spam_bot.py
 Description:
-    Telegram Bot that figths against the spammer users that join groups to publish their annoying 
-    and unwanted info.
-Author:
-    Jose Rios Rubio
-    Branch: aaloy
+    Telegram Bot that figths against the spammer users that join groups to publish
+    their annoying and unwanted info.
+    Author:
+        Jose Rios Rubio
+    Branch:
+        aaloy
 Creation date:
     04/04/2018
 Last modified date:
@@ -33,7 +34,7 @@ from constants import TEXT
 from collections import OrderedDict
 from telegram import ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from pathlib import Path
+# from pathlib import Path
 import constants as conf
 import logging
 
@@ -172,7 +173,7 @@ def get_chat_messages_file(chat_id):
 
 
 def get_chat_config_file(chat_id):
-    """Determine chat config file from the list by ID. Get the file 
+    """Determine chat config file from the list by ID. Get the file
     if exists or create it if not"""
     configuration = OrderedDict([("ID", chat_id), ("File", None)])
     found = False
@@ -357,7 +358,7 @@ def get_admins_usernames_in_string(bot, chat_id):
         log.debug("Exception when checking Admins of {} - {}".format(chat_id, str(e)))
         return None
     for admin in group_admins:
-        if admin.user.is_bot == False:  # Ignore Bots
+        if admin.user.is_bot is False:  # Ignore Bots
             list_admins_names.append(admin.user.username)
     for admin_name in sorted(list_admins_names):
         if admins == "":
@@ -385,8 +386,7 @@ def notify_all_chats(bot, message):
 
 ####################################################################################################
 
-### Received Telegram not-command messages handlers ###
-
+# Received Telegram not-command messages handlers ###
 
 def left_user(bot, update):
     """Member left the group event handler"""
@@ -444,7 +444,7 @@ def new_user(bot, update):
                                 bot_message = TEXT[lang]["USER_CANT_ADD_BOT"].format(
                                     msg_from_user_name, join_user_alias
                                 )
-                                lgo.debug(
+                                log.debug(
                                     "Added Bot successfully kicked.\n  (Chat) - ({}).".format(
                                         chat_id
                                     )
@@ -600,9 +600,9 @@ def msg_nocmd(bot, update):
         user_name = update.message.from_user.name
         msg_date = (update.message.date).now().strftime("%Y-%m-%d %H:%M:%S")
         text = update.message.text
-        if text == None:
+        if text is None:
             text = getattr(update.message, "caption_html", None)
-            if text == None:
+            if text is None:
                 text = getattr(update.message, "caption", None)
         enable = get_chat_config(chat_id, "Antispam")
         time_for_allow_urls_h = get_chat_config(chat_id, "Time_for_allow_urls_h")
@@ -769,7 +769,7 @@ def msg_nocmd(bot, update):
 
 ####################################################################################################
 
-### Received Telegram command messages handlers ###
+# Received Telegram command messages handlers ###
 
 
 def cmd_start(bot, update):
@@ -822,7 +822,7 @@ def cmd_language(bot, update, args):
     allow_command = True
     if chat_type != "private":
         is_admin = user_is_admin(bot, user_id, chat_id)
-        if is_admin == False:
+        if is_admin is False:
             allow_command = False
     if allow_command:
         if len(args) == 1:
@@ -839,7 +839,7 @@ def cmd_language(bot, update, args):
                 bot_msg = TEXT[lang]["LANG_BAD_LANG"]
         else:
             bot_msg = TEXT[lang]["LANG_NOT_ARG"]
-    elif is_admin == False:
+    elif is_admin is False:
         bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     else:
         bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
@@ -857,7 +857,7 @@ def cmd_set_messages(bot, update, args):
     chat_type = update.message.chat.type
     lang = get_chat_config(chat_id, "Language")
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin == True:
+    if is_admin is True:
         if len(args) == 1:
             num_msgs_provided = args[0]
             if num_msgs_provided.isdigit():
@@ -873,7 +873,7 @@ def cmd_set_messages(bot, update, args):
                 bot_msg = TEXT[lang]["SET_MSG_BAD_ARG"]
         else:
             bot_msg = TEXT[lang]["SET_MSG_NOT_ARG"]
-    elif is_admin == False:
+    elif is_admin is False:
         bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     else:
         bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
@@ -891,7 +891,7 @@ def cmd_set_hours(bot, update, args):
     chat_type = update.message.chat.type
     lang = get_chat_config(chat_id, "Language")
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin == True:
+    if is_admin is True:
         if len(args) == 1:
             hours_provided = args[0]
             if hours_provided.isdigit():
@@ -907,7 +907,7 @@ def cmd_set_hours(bot, update, args):
                 bot_msg = TEXT[lang]["SET_HOURS_BAD_ARG"]
         else:
             bot_msg = TEXT[lang]["SET_HOURS_NOT_ARG"]
-    elif is_admin == False:
+    elif is_admin is False:
         bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     else:
         bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
@@ -968,12 +968,12 @@ def cmd_call_when_spam(bot, update, args):
         chat_id, "Call_admins_when_spam_detected"
     )
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin == True:
+    if is_admin is True:
         if len(args) == 1:
             value_provided = args[0]
             if value_provided == "enable" or value_provided == "disable":
                 if value_provided == "enable":
-                    if call_admins_when_spam_detected == True:
+                    if call_admins_when_spam_detected is True:
                         bot_msg = TEXT[lang]["CALL_WHEN_SPAM_ALREADY_ENABLE"]
                     else:
                         bot_msg = TEXT[lang]["CALL_WHEN_SPAM_ENABLE"]
@@ -984,7 +984,7 @@ def cmd_call_when_spam(bot, update, args):
                             call_admins_when_spam_detected,
                         )
                 else:
-                    if call_admins_when_spam_detected == True:
+                    if call_admins_when_spam_detected is True:
                         bot_msg = TEXT[lang]["CALL_WHEN_SPAM_DISABLE"]
                         call_admins_when_spam_detected = False
                         save_config_property(
@@ -998,7 +998,7 @@ def cmd_call_when_spam(bot, update, args):
                 bot_msg = TEXT[lang]["CALL_WHEN_SPAM_NOT_ARG"]
         else:
             bot_msg = TEXT[lang]["CALL_WHEN_SPAM_NOT_ARG"]
-    elif is_admin == False:
+    elif is_admin is False:
         bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     else:
         bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
@@ -1017,12 +1017,12 @@ def cmd_users_add_bots(bot, update, args):
     lang = get_chat_config(chat_id, "Language")
     allow_users_to_add_bots = get_chat_config(chat_id, "Allow_users_to_add_bots")
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin == True:
+    if is_admin is True:
         if len(args) == 1:
             value_provided = args[0]
             if value_provided == "enable" or value_provided == "disable":
                 if value_provided == "enable":
-                    if allow_users_to_add_bots == True:
+                    if allow_users_to_add_bots is True:
                         bot_msg = TEXT[lang]["USERS_ADD_BOTS_ALREADY_ENABLE"]
                     else:
                         bot_msg = TEXT[lang]["USERS_ADD_BOTS_ENABLE"]
@@ -1031,7 +1031,7 @@ def cmd_users_add_bots(bot, update, args):
                             chat_id, "Allow_users_to_add_bots", allow_users_to_add_bots
                         )
                 else:
-                    if allow_users_to_add_bots == True:
+                    if allow_users_to_add_bots is True:
                         bot_msg = TEXT[lang]["USERS_ADD_BOTS_DISABLE"]
                         allow_users_to_add_bots = False
                         save_config_property(
@@ -1043,7 +1043,7 @@ def cmd_users_add_bots(bot, update, args):
                 bot_msg = TEXT[lang]["USERS_ADD_BOTS_NOT_ARG"]
         else:
             bot_msg = TEXT[lang]["USERS_ADD_BOTS_NOT_ARG"]
-    elif is_admin == False:
+    elif is_admin is False:
         bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     else:
         bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
@@ -1060,7 +1060,7 @@ def cmd_allow_user(bot, update, args):
     user_id = update.message.from_user.id
     lang = get_chat_config(chat_id, "Language")
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin == True:
+    if is_admin is True:
         if len(args) >= 1:
             user_alias = ""
             for arg in args:
@@ -1069,8 +1069,8 @@ def cmd_allow_user(bot, update, args):
                 else:
                     user_alias = "{} {}".format(user_alias, arg)
             user_data = get_user_from_alias(chat_id, user_alias)
-            if user_data != None:
-                if user_data["Allow_user"] == False:
+            if user_data is not None:
+                if user_data["Allow_user"] is False:
                     user_data["Allow_user"] = True
                     update_user(chat_id, user_data)
                     bot_msg = TEXT[lang]["CMD_ALLOW_USR_OK"].format(user_alias)
@@ -1082,7 +1082,7 @@ def cmd_allow_user(bot, update, args):
                 bot_msg = TEXT[lang]["CMD_ALLOW_USR_NOT_FOUND"]
         else:
             bot_msg = TEXT[lang]["CMD_ALLOW_USR_NOT_ARG"]
-    elif is_admin == False:
+    elif is_admin is False:
         bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     else:
         bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
@@ -1097,14 +1097,14 @@ def cmd_enable(bot, update):
     lang = get_chat_config(chat_id, "Language")
     enable = get_chat_config(chat_id, "Antispam")
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin == True:
+    if is_admin is True:
         if enable:
             bot_msg = TEXT[lang]["ALREADY_ENABLE"]
         else:
             enable = True
             save_config_property(chat_id, "Antispam", enable)
             bot_msg = TEXT[lang]["ENABLE"]
-    elif is_admin == False:
+    elif is_admin is False:
         bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     else:
         bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
@@ -1123,14 +1123,14 @@ def cmd_disable(bot, update):
     lang = get_chat_config(chat_id, "Language")
     enable = get_chat_config(chat_id, "Antispam")
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin == True:
+    if is_admin is True:
         if enable:
             enable = False
             save_config_property(chat_id, "Antispam", enable)
             bot_msg = TEXT[lang]["DISABLE"]
         else:
             bot_msg = TEXT[lang]["ALREADY_DISABLE"]
-    elif is_admin == False:
+    elif is_admin is False:
         bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     else:
         bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
@@ -1150,7 +1150,7 @@ def cmd_notify_all_chats(bot, update):
     lang = get_chat_config(chat_id, "Language")
     if chat_type == "private":
         if user_id == conf.OWNER_ID:
-            if owner_notify == False:
+            if owner_notify is False:
                 owner_notify = True
                 bot.send_message(chat_id, TEXT[lang]["CMD_NOTIFY_ALL"])
             else:
@@ -1171,7 +1171,7 @@ def cmd_notify_discard(bot, update):
     lang = get_chat_config(chat_id, "Language")
     if chat_type == "private":
         if user_id == conf.OWNER_ID:
-            if owner_notify == True:
+            if owner_notify is True:
                 owner_notify = False
                 bot.send_message(chat_id, TEXT[lang]["CMD_NOTIFY_DISCARD"])
             else:
@@ -1294,7 +1294,7 @@ def selfdestruct_messages(bot):
 
 ####################################################################################################
 
-### Main Function ###
+# Main Function ###
 
 
 def main():
@@ -1356,5 +1356,3 @@ if __name__ == "__main__":
     )
     log.info("Bot Starting ...")
     main()
-
-### End Of Code ###

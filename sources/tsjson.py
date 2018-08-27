@@ -100,8 +100,8 @@ class TSjson(object):
     def update(self, data, uide):
         """
         Funcion para actualizar datos de un archivo json
-        [Nota: Cada dato json necesita al menos 1 elemento identificador unico 
-        (uide), si no es asi, la actualizacion se producira en el primer dato 
+        [Nota: Cada dato json necesita al menos 1 elemento identificador unico
+        (uide), si no es asi, la actualizacion se producira en el primer dato
         con dicho elemento uide que se encuentre]
         """
         file_data = self.read()  # Leer todo el archivo json
