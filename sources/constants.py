@@ -61,6 +61,8 @@ INIT_CALL_ADMINS_WHEN_SPAM = getattr(conf, "INIT_CALL_ADMINS_WHEN_SPAM", False)
 INIT_ALLOW_USERS_ADD_BOTS = getattr(conf, "INIT_ALLOW_USERS_ADD_BOTS", False)
 # Time (in mins) to remove self-destruct sent messages from the Bot
 T_DEL_MSG = getattr(conf, "T_DEL_MSG", 3)
+# Save messages for each chat
+SAVE_CHAT_MESSAGES = getattr(conf, "SAVE_CHAT_MESSAGES", True)
 DEVELOPER = "@JoseTLG"  # Bot developer
 REPOSITORY = "https://github.com/J-Rios/TLG_AntiJoin2SpamBot"  # Bot code repository
 DEV_PAYPAL = "https://www.paypal.me/josrios"  # Developer Paypal address

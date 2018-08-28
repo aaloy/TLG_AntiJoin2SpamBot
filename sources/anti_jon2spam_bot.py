@@ -32,8 +32,10 @@ from datetime import datetime
 from time import time, sleep, strptime, mktime
 from constants import TEXT
 from collections import OrderedDict
-from telegram import ParseMode
+from telegram import ParseMode, MessageEntity
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.error import BadRequest
+from user_info import user_is_admin
 # from pathlib import Path
 import constants as conf
 import logging
@@ -256,23 +258,23 @@ def register_new_user(chat_id, user_id, user_name, join_date, allow_user):
 
 def add_new_message(chat_id, msg_id, user_id, user_name, text, msg_date):
     """Add new message to the messages file"""
-    # Default new message data
-    msg_data = OrderedDict(
-        [
-            ("Chat_id", chat_id),
-            ("Msg_id", msg_id),
-            ("User_id", user_id),
-            ("User_name", user_name),
-            ("Text", text),
-            ("Date", msg_date),
-        ]
-    )
-    # Get the chat messages file and write the messages data to it
-    fjson_msg = get_chat_messages_file(chat_id)
-    fjson_msg.write_content(msg_data)
+    if conf.SAVE_CHAT_MESSAGES:
+        msg_data = OrderedDict(
+            [
+                ("Chat_id", chat_id),
+                ("Msg_id", msg_id),
+                ("User_id", user_id),
+                ("User_name", user_name),
+                ("Text", text),
+                ("Date", msg_date),
+            ]
+        )
+        # Get the chat messages file and write the messages data to it
+        fjson_msg = get_chat_messages_file(chat_id)
+        fjson_msg.write_content(msg_data)
 
 
-def get_message(chat_id, msg_id):
+def _get_message(chat_id, msg_id):
     """Get message data of a chat by ID"""
     fjson_msg = get_chat_messages_file(chat_id)
     messages_data = fjson_msg.read_content()
@@ -323,65 +325,27 @@ def update_user(chat_id, new_user_data):
         fjson_usr.write_content(new_user_data)
 
 
-def user_is_admin(bot, user_id, chat_id):
-    """Check if the specified user is an Administrator of a group given by IDs"""
-    try:
-        group_admins = bot.get_chat_administrators(chat_id)
-    except:
-        return None
-    for admin in group_admins:
-        if user_id == admin.user.id:
-            return True
-    return False
-
-
-def bot_is_admin(bot, chat_id):
-    """Check if the Bot is Admin of the actual group"""
-    try:
-        bot_id = bot.id
-        group_admins = bot.get_chat_administrators(chat_id)
-    except:
-        return None
-    for admin in group_admins:
-        if bot_id == admin.user.id:
-            return True
-    return False
-
-
 def get_admins_usernames_in_string(bot, chat_id):
     """Get all the group Administrators usernames/alias in a single line string separed by \' \'"""
-    admins = ""
-    list_admins_names = list()
     try:
         group_admins = bot.get_chat_administrators(chat_id)
     except Exception as e:
         log.debug("Exception when checking Admins of {} - {}".format(chat_id, str(e)))
         return None
-    for admin in group_admins:
-        if admin.user.is_bot is False:  # Ignore Bots
-            list_admins_names.append(admin.user.username)
-    for admin_name in sorted(list_admins_names):
-        if admins == "":
-            admins = "@{}".format(admin_name)
-        else:
-            admins = "{}\n@{}".format(admins, admin_name)
-    return admins
+    list_admins_names = sorted(["@{}".format(admin.user.username) for admin in group_admins if not admin.user.is_bot])
+    return "\n".join(list_admins_names)
 
 
 def notify_all_chats(bot, message):
-    """Publish a notify message in all the Chats where the Bot is"""
+    """Publish a notify message in all the Chats where the Bot is, except
+    for the public chats (the ones with non negative ids"""
     # If directory data exists, check all subdirectories names (chats ID)
-    chats_files = listdir(conf.DATA_DIR)
-    if chats_files:
-        for chat_id in chats_files:
-            # Don't publish in private chats
-            if chat_id[0] == "-":
-                try:
-                    bot.send_message(chat_id, message)
-                except Exception as e:
-                    log.debug(
-                        "Exception when publishing in {} - {}".format(chat_id, str(e))
-                    )
+    chats_files = [chat for chat in listdir(conf.DATA_DIR) if chat.startswith("-")]
+    for chat_id in chats_files:
+        try:
+            bot.send_message(chat_id, message)
+        except Exception as e:
+            log.debug("Exception when publishing in {} - {}".format(chat_id, str(e)))
 
 
 ####################################################################################################
@@ -389,7 +353,10 @@ def notify_all_chats(bot, message):
 # Received Telegram not-command messages handlers ###
 
 def left_user(bot, update):
-    """Member left the group event handler"""
+    """Member left the group event handler. On this case we try to
+    avoid the message that telegram sends when removing the user
+    form the group."""
+
     chat_id = update.message.chat.id
     message_id = update.message.message_id
     user = update.message.left_chat_member
@@ -401,10 +368,10 @@ def left_user(bot, update):
         if has_url:
             bot.delete_message(chat_id, message_id)
         else:
-            if len(left_user_name) > 30:
+            if len(left_user_name) > conf.MAX_USERNAME_LENGTH:
                 bot.delete_message(chat_id, message_id)
-    except:
-        pass
+    except Exception as e:
+        log.error("Error on deleting left message {}".format(e))
 
 
 def new_user(bot, update):
@@ -434,11 +401,7 @@ def new_user(bot, update):
                         # If not allow users to add Bots
                         if get_chat_config(chat_id, "Allow_users_to_add_bots") is False:
                             # Kick the Added Bot and notify
-                            log.debug(
-                                "An user has added a Bot.\n  (Chat) - ({}).".format(
-                                    chat_id
-                                )
-                            )
+                            log.debug("An user has added a Bot.\n  (Chat) - ({}).".format(chat_id))
                             try:
                                 bot.kickChatMember(chat_id, join_user_id)
                                 bot_message = TEXT[lang]["USER_CANT_ADD_BOT"].format(
@@ -1060,7 +1023,7 @@ def cmd_allow_user(bot, update, args):
     user_id = update.message.from_user.id
     lang = get_chat_config(chat_id, "Language")
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin is True:
+    if is_admin:
         if len(args) >= 1:
             user_alias = ""
             for arg in args:
@@ -1082,10 +1045,8 @@ def cmd_allow_user(bot, update, args):
                 bot_msg = TEXT[lang]["CMD_ALLOW_USR_NOT_FOUND"]
         else:
             bot_msg = TEXT[lang]["CMD_ALLOW_USR_NOT_ARG"]
-    elif is_admin is False:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     else:
-        bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
+        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     bot.send_message(chat_id, bot_msg)
 
 
@@ -1211,6 +1172,13 @@ def cmd_about(bot, update):
         tlg_send_selfdestruct_msg(bot, chat_id, bot_msg)
 
 
+def cmd_test(bot, update):
+    """Command for test purposes"""
+    chat_id = update.message.chat_id
+    chat_type = update.message.chat.type
+    info = "{}".format(get_admins_usernames_in_string(bot, chat_id))
+    tlg_send_selfdestruct_msg(bot, chat_id, info)
+
 ####################################################################################################
 
 
@@ -1285,12 +1253,39 @@ def selfdestruct_messages(bot):
                     if bot.delete_message(sent_msg["Chat_id"], sent_msg["Msg_id"]):
                         to_delete_messages_list.remove(sent_msg)
                         log.debug("Message successfully removed.")
-                except:
-                    log.error("Fail - Can't delete message.")
+                except Exception as e:
+                    log.error("{} Fail - Can't delete message.".format(e))
                     to_delete_messages_list.remove(sent_msg)
         # Wait 10s (release CPU usage)
         sleep(10)
 
+
+def user_can_post_links(user, chat_id):
+    """Check if the user can post a link
+    given is his or her history, name, and other parameters
+    """
+    return True
+
+
+def link_control(bot, update):
+    """ This hook control if a user can post links or not
+    in a message group. If the user is not allowed to post link,
+    for any restriction applied, the whole message is deleted.
+    """
+    chat_id = update.message.chat.id
+    msg_id = update.message.message_id
+    user = update.message.left_chat_member
+    entities = update.message.parse_entities()
+    log.info("Found {} links".format(len(entities.items())))
+    if not user_can_post_links(user, chat_id):
+        try:
+            result = bot.delete_message(chat_id, msg_id)
+        except BadRequest:
+            result = False
+        if result:
+            log.info("Message {} deleted".format(msg_id))
+        else:
+            log.error("Error deleting msg {}".format(msg_id))
 
 ####################################################################################################
 
@@ -1305,6 +1300,14 @@ def main():
     # Create an event handler (updater) for a Bot with the given Token and get the dispatcher
     updater = Updater(conf.TOKEN)
     dp = updater.dispatcher
+
+    link_sandox_handler = MessageHandler(
+        Filters.text
+        & (Filters.entity(MessageEntity.URL) | Filters.entity(MessageEntity.TEXT_LINK)),
+        link_control,
+    )
+    dp.add_handler(link_sandox_handler)
+
     # Set to dispatcher a not-command messages handler
     dp.add_handler(
         MessageHandler(
@@ -1326,6 +1329,7 @@ def main():
     # Set to dispatcher all expected commands messages handler
     dp.add_handler(CommandHandler("start", cmd_start))
     dp.add_handler(CommandHandler("help", cmd_help))
+    dp.add_handler(CommandHandler("test", cmd_test))
     dp.add_handler(CommandHandler("commands", cmd_commands))
     dp.add_handler(CommandHandler("language", cmd_language, pass_args=True))
     dp.add_handler(CommandHandler("set_messages", cmd_set_messages, pass_args=True))
