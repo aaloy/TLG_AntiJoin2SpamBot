@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "7e28537f98ab458ede8eef0ac4ab3e7b82b2ad16ab2a297d25bee42bc7233dc6"
+            "sha256": "92f497cf3f44f234cc69794963094789b2de879a8a4a04c7c37871d0beb44b14"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -37,6 +37,13 @@
             ],
             "version": "==0.16.0"
         },
+        "idna": {
+            "hashes": [
+                "sha256:156a6814fb5ac1fc6850fb002e0852d56c0c8d2531923a51032d1b70760e186e",
+                "sha256:684a38a6f903c1d71d6d5fac066b58d7768af4de2b832e426ec79c30daa94a16"
+            ],
+            "version": "==2.7"
+        },
         "python-telegram-bot": {
             "hashes": [
                 "sha256:725a28f77a04d056559015963a21eacf5d2d1f1722192237284828b7cc437465",
@@ -44,6 +51,20 @@
             ],
             "index": "pypi",
             "version": "==10.1.0"
+        },
+        "uritools": {
+            "hashes": [
+                "sha256:522c2027e51e70e0cc40aa703fbf8665a879776826317ff1b68069084030975b",
+                "sha256:80e8e23cafad54fd85811b5d9ba0fc595d933f5727c61c3937945eec09f99e2b"
+            ],
+            "version": "==2.2.0"
+        },
+        "urlextract": {
+            "hashes": [
+                "sha256:be0ac200746bf87d3ccb024d74fe497dbc35bf8ce7f942f78fdf6cc2454787cc"
+            ],
+            "index": "pypi",
+            "version": "==0.8.3"
         }
     },
     "develop": {

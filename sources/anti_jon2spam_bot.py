@@ -27,7 +27,8 @@ import re
 import sys
 import signal
 import tsjson
-from os import path, makedirs, listdir
+from os import path, makedirs, listdir, execl
+from threading import Thread
 from datetime import datetime
 from time import time, sleep, strptime, mktime
 from constants import TEXT
@@ -35,6 +36,7 @@ from collections import OrderedDict
 from telegram import ParseMode, MessageEntity
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.error import BadRequest
+from urlextract import URLExtract
 from user_info import user_is_admin
 # from pathlib import Path
 import constants as conf
@@ -57,6 +59,10 @@ log = logging.getLogger(__name__)
 def signal_handler(signal, frame):
     """Termination signals (SIGINT, SIGTERM) handler for program process"""
     log.info("Closing the bot ...")
+    sys.exit(1)
+
+    """
+    TODO: Not suer if this is required
     # Acquire all messages and users files mutex to ensure not read/write operation on them
     for chat_users_file in files_users_list:
         chat_users_file["File"].lock.acquire()
@@ -66,6 +72,7 @@ def signal_handler(signal, frame):
         chat_config_file["File"].lock.acquire()
     # Close the program
     sys.exit(1)
+    """
 
 
 # Signals attachment ###
@@ -374,72 +381,108 @@ def left_user(bot, update):
         log.error("Error on deleting left message {}".format(e))
 
 
+def anti_spam_bot_added_event(chat_id, bot, update):
+    """The anti spam bot has been added to the chat,
+    update the chant configuration files, and inform the group
+    about the bot being added"""
+
+    admin_language = update.message.from_user.language_code[0:2]
+    if admin_language == "es":
+        lang = "ES"
+        save_config_property(chat_id, "Language", lang)
+    else:
+        lang = "EN"
+        save_config_property(chat_id, "Language", lang)
+    # Notify to Bot Owner that the Bot has been added to a group
+    notify_msg = "The Bot has been added to a new group:\n\n- ID: {}\n".format(chat_id)
+    chat_title = update.message.chat.title
+    if chat_title:
+        save_config_property(chat_id, "Title", chat_title)
+        notify_msg = "{}- Title: {}\n".format(notify_msg, chat_title)
+    else:
+        notify_msg = "{}- Title: Unknown\n".format(notify_msg)
+    chat_link = update.message.chat.username
+    if chat_link:
+        chat_link = "@{}".format(chat_link)
+        save_config_property(chat_id, "Link", chat_link)
+        notify_msg = "{}- Link: {}\n".format(notify_msg, chat_link)
+    else:
+        notify_msg = "{}- Link: Unknown\n".format(notify_msg)
+    admin_name = update.message.from_user.name
+    admin_id = update.message.from_user.id
+    notify_msg = "{}- Admin: {} [{}]".format(notify_msg, admin_name, admin_id)
+    debug_print_tlg(bot, notify_msg)
+    # Send bot join message
+    bot_message = TEXT[lang]["ANTI-SPAM_BOT_ADDED_TO_GROUP"]
+    bot.send_message(chat_id, bot_message)
+
+
+def try_to_add_a_bot_event(bot, message, join_user, chat_id):
+    """Check if the join user is a bot and has been added by
+    someone with authorization. Delete the bot if not.
+
+    Returns true if the bot can be registered."""
+
+    to_register_user = True
+    msg_from_user_id = message.from_user.id
+    join_user_id = join_user.id
+    join_user_alias = join_user.name
+    lang = get_chat_config(chat_id, "Language")
+
+    # If the user that has been added the Bot is not an Admin
+    if not user_is_admin(bot, msg_from_user_id, chat_id):
+        # If not allow users to add Bots
+        if not get_chat_config(chat_id, "Allow_users_to_add_bots") is False:
+            # Kick the Added Bot and notify
+            log.debug("An user has added a Bot.\n  (Chat) - ({}).".format(chat_id))
+            try:
+                bot.kickChatMember(chat_id, join_user_id)
+                bot_message = TEXT[lang]["USER_CANT_ADD_BOT"].format(
+                    message.from_user.name, join_user_alias
+                )
+                log.debug("Added Bot successfully kicked.\n  (Chat) - ({}).".format(chat_id))
+            except Exception as e:
+                log.debug("Exception when kicking a Bot - {}".format(str(e)))
+                if (str(e) == "Not enough rights to restrict/unrestrict chat member"):
+                    bot_message = TEXT[lang]["USER_CANT_ADD_BOT_CANT_KICK"].format(message.from_user.name, join_user.name)
+
+            if get_chat_config(chat_id, "Call_admins_when_spam_detected"):
+                admins = get_admins_usernames_in_string(bot, chat_id)
+                if admins:
+                    bot_message = "{}{}".format(bot_message, TEXT[lang]["CALLING_ADMINS"].format(admins))
+            bot.send_message(chat_id, bot_message)
+            to_register_user = False
+    return to_register_user
+
+
 def new_user(bot, update):
     """New member join the group event handler"""
-    chat_id = update.message.chat_id
-    message_id = update.message.message_id
-    msg_from_user_id = update.message.from_user.id
-    msg_from_user_name = update.message.from_user.name
-    join_date = (update.message.date).now().strftime("%Y-%m-%d %H:%M:%S")
+    message = update.message
+    chat_id = message.chat_id
+    message_id = message.message_id
+    msg_from_user_id = message.from_user.id
+    join_date = (message.date).now().strftime("%Y-%m-%d %H:%M:%S")
     lang = get_chat_config(chat_id, "Language")
     # For each new user that join or has been added
-    for join_user in update.message.new_chat_members:
+    for join_user in message.new_chat_members:
         join_user_id = join_user.id
         join_user_alias = join_user.name
-        join_user_name = "{} {}".format(
-            update.message.from_user.first_name, update.message.from_user.last_name
-        )
+        join_user_name = "{} {}".format(message.from_user.first_name, message.from_user.last_name)
         # If the added user is not myself (this Bot)
-        if bot.id != join_user_id:
+        if bot.id == join_user_id:
+            # The Anti-Spam Bot has been added to a group
+            anti_spam_bot_added_event(chat_id, bot, update)
+        else:
             to_register_user = True
             # If the message user source is not the join user, it has been invited/added by another
-            if msg_from_user_id != join_user_id:
-                # If the member that has been join the group is a Bot
-                if update.message.new_chat_members[0].is_bot:
-                    # If the user that has been added the Bot is not an Admin
-                    if not user_is_admin(bot, msg_from_user_id, chat_id):
-                        # If not allow users to add Bots
-                        if get_chat_config(chat_id, "Allow_users_to_add_bots") is False:
-                            # Kick the Added Bot and notify
-                            log.debug("An user has added a Bot.\n  (Chat) - ({}).".format(chat_id))
-                            try:
-                                bot.kickChatMember(chat_id, join_user_id)
-                                bot_message = TEXT[lang]["USER_CANT_ADD_BOT"].format(
-                                    msg_from_user_name, join_user_alias
-                                )
-                                log.debug(
-                                    "Added Bot successfully kicked.\n  (Chat) - ({}).".format(
-                                        chat_id
-                                    )
-                                )
-                            except Exception as e:
-                                log.debug(
-                                    "Exception when kicking a Bot - {}".format(str(e))
-                                )
-                                if (
-                                    str(e)
-                                    == "Not enough rights to restrict/unrestrict chat member"
-                                ):
-                                    bot_message = TEXT[lang][
-                                        "USER_CANT_ADD_BOT_CANT_KICK"
-                                    ].format(msg_from_user_name, join_user_alias)
-                            call_admins_when_spam_detected = get_chat_config(
-                                chat_id, "Call_admins_when_spam_detected"
-                            )
-                            if call_admins_when_spam_detected:
-                                admins = get_admins_usernames_in_string(bot, chat_id)
-                                if admins:
-                                    bot_msg_2_append = TEXT[lang][
-                                        "CALLING_ADMINS"
-                                    ].format(admins)
-                                    bot_message = "{}{}".format(
-                                        bot_message, bot_msg_2_append
-                                    )
-                            bot.send_message(chat_id, bot_message)
-                            to_register_user = False
+            if msg_from_user_id != join_user_id and join_user.is_bot:
+                # If a user has added a bot check if could be added and delete id if not
+                to_register_user = try_to_add_a_bot_event(bot, msg_from_user_id, join_user, chat_id)
+            # i
             if to_register_user:
                 # Check if there is an URL in the user name
-                has_url = re.findall(conf.REGEX_URLS, join_user_name)
+                extractor = URLExtract()
+                has_url = extractor.has_urls(join_user_name) or extractor.has_urls(join_user_alias)
                 if has_url:
                     log.debug(
                         "Spammer (URL name) join detected.\n  (Chat) - ({}).".format(
@@ -495,46 +538,12 @@ def new_user(bot, update):
                                 ].format(join_user_name)
                                 bot.send_message(chat_id, bot_message)
                 if len(join_user_alias) > conf.MAX_USERNAME_ALIAS:
-                    join_user_alias = join_user_alias[0:50]
+                    join_user_alias = join_user_alias[0:conf.MAX_USERNAME_ALIAS-3]
                     join_user_alias = "{}...".format(join_user_alias)
                 if not user_in_json(chat_id, join_user_id):
                     register_new_user(
                         chat_id, join_user_id, join_user_alias, join_date, False
                     )
-        # The Anti-Spam Bot has been added to a group
-        else:
-            # Get the language of the Telegram client software that the Admin that has added the Bot to
-            # assume this is the chat language and configure Bot language
-            admin_language = update.message.from_user.language_code[0:2]
-            if admin_language == "es":
-                lang = "ES"
-                save_config_property(chat_id, "Language", lang)
-            else:
-                lang = "EN"
-                save_config_property(chat_id, "Language", lang)
-            # Notify to Bot Owner that the Bot has been added to a group
-            notify_msg = "The Bot has been added to a new group:\n\n"
-            notify_msg = "{}- ID: {}\n".format(notify_msg, chat_id)
-            chat_title = update.message.chat.title
-            if chat_title:
-                save_config_property(chat_id, "Title", chat_title)
-                notify_msg = "{}- Title: {}\n".format(notify_msg, chat_title)
-            else:
-                notify_msg = "{}- Title: Unknown\n".format(notify_msg)
-            chat_link = update.message.chat.username
-            if chat_link:
-                chat_link = "@{}".format(chat_link)
-                save_config_property(chat_id, "Link", chat_link)
-                notify_msg = "{}- Link: {}\n".format(notify_msg, chat_link)
-            else:
-                notify_msg = "{}- Link: Unknown\n".format(notify_msg)
-            admin_name = update.message.from_user.name
-            admin_id = update.message.from_user.id
-            notify_msg = "{}- Admin: {} [{}]".format(notify_msg, admin_name, admin_id)
-            debug_print_tlg(bot, notify_msg)
-            # Send bot join message
-            bot_message = TEXT[lang]["ANTI-SPAM_BOT_ADDED_TO_GROUP"]
-            bot.send_message(chat_id, bot_message)
 
 
 def msg_nocmd(bot, update):
@@ -575,7 +584,8 @@ def msg_nocmd(bot, update):
         call_admins_when_spam_detected = get_chat_config(
             chat_id, "Call_admins_when_spam_detected"
         )
-        # If user not yet register, add to users file, else, get his number of published msgs
+        # If user not yet register, it means it was there before the bot, 
+        # assume that is legit, add to users file, else, get his number of published msgs
         if not user_in_json(chat_id, user_id):
             # Register user and set "Num_messages" and "Join_date" to allow publish URLs
             register_new_user(chat_id, user_id, user_name, msg_date, True)
@@ -1176,7 +1186,7 @@ def cmd_test(bot, update):
     """Command for test purposes"""
     chat_id = update.message.chat_id
     chat_type = update.message.chat.type
-    info = "{}".format(get_admins_usernames_in_string(bot, chat_id))
+    info = "xx{}".format(get_admins_usernames_in_string(bot, chat_id))
     tlg_send_selfdestruct_msg(bot, chat_id, info)
 
 ####################################################################################################
@@ -1345,6 +1355,18 @@ def main():
     dp.add_handler(CommandHandler("notify_discard", cmd_notify_discard))
     dp.add_handler(CommandHandler("version", cmd_version))
     dp.add_handler(CommandHandler("about", cmd_about))
+    
+    # Allow restar
+    def stop_and_restart():
+        """Gracefully stop the Updater and replace the current process with a new one"""
+        updater.stop()
+        execl(sys.executable, sys.executable, *sys.argv)
+
+    def restart(bot, update):
+        update.message.reply_text('Bot is restarting...')
+        Thread(target=stop_and_restart).start()
+
+    dp.add_handler(CommandHandler('r', restart, filters=Filters.user(username='@aaloy')))        
     # Launch the Bot ignoring pending messages (clean=True)
     updater.start_polling(clean=True)
     # Handle self-messages delete
