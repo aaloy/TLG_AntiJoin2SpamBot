@@ -29,27 +29,38 @@ needs to work properly. Please refer to the README file for more information."""
     sys.exit(1)
 
 # Constants
-
-TOKEN = conf.TELEGRAM_API_TOKEN  # Bot Token (get it from @BotFather)
-OWNER_ID = 000000000  # Owner ID (The one that can send notify messages to all chats)
-DEBUG_TO_CHAT = 000000000  # Chat ID where the Bot is going to send debug messages
-DATA_DIR = "./data"  # Data directory path
-F_USERS = "users.json"  # Chat JSON files name
-F_MSG = "msgs.json"  # Messages JSON files name
-F_CONF = "configs.json"  # Chat configurations JSON files name
-INIT_TITLE = "Unknown Chat"  # Initial chat title at Bot start
-INIT_LINK = "Unknown"  # Initial chat link at Bot start
-INIT_LANG = "EN"  # Initial language at Bot start
-INIT_ENABLE = (True,)  # Initial enable/disable status at Bot start
+# Bot Token (get it from @BotFather) this is mandatory
+TOKEN = conf.TELEGRAM_API_TOKEN
+# Owner ID (The one that can send notify messages to all chats)
+OWNER_ID = getattr(conf, "OWNER_ID", 000000000)
+# Chat ID where the Bot is going to send debug messages
+DEBUG_TO_CHAT = getattr(conf, "DEBUG_TO_CHAT", 000000000)
+# Data directory path
+DATA_DIR = getattr(conf, "DATA_DIR", "./data")
+# Chat JSON files name
+F_USERS = getattr(conf, "F_USERS", "users.json")
+# Messages JSON files name
+F_MSG = getattr(conf, "F_MSG", "msgs.json")
+# Chat configurations JSON files name
+F_CONF = getattr(conf, "F_CONF", "configs.json")
+# Initial chat title at Bot start
+INIT_TITLE = getattr(conf, "INIT_TITLE", "Unknown Chat")
+# Initial chat link at Bot start
+INIT_LINK = getattr(conf, "INIT_LINK", "Unknown")
+# Initial language at Bot start
+INIT_LANG = getattr(conf, "INIT_LANG", "EN")
+# Initial enable/disable status at Bot start
+INIT_ENABLE = getattr(conf, "INIT_ENABLE", True)
 # Initial hours until allow a user to publish URLs in messages
-INIT_TIME_ALLOW_URLS = 24
+INIT_TIME_ALLOW_URLS = getattr(conf, "INIT_TIME_ALLOW_URLS", 24)
 # Initial number of users messages until allow publish URLs
-INIT_MIN_MSG_ALLOW_URLS = 10
+INIT_MIN_MSG_ALLOW_URLS = getattr(conf, "INIT_MIN_MSG_ALLOW_URLS", 10)
 # Initial notify admins value when Spam is detected
-INIT_CALL_ADMINS_WHEN_SPAM = False
+INIT_CALL_ADMINS_WHEN_SPAM = getattr(conf, "INIT_CALL_ADMINS_WHEN_SPAM", False)
 # Initial allow users to invite and add Bots to the group
 INIT_ALLOW_USERS_ADD_BOTS = getattr(conf, "INIT_ALLOW_USERS_ADD_BOTS", False)
-T_DEL_MSG = 3  # Time (in mins) to remove self-destruct sent messages from the Bot
+# Time (in mins) to remove self-destruct sent messages from the Bot
+T_DEL_MSG = getattr(conf, "T_DEL_MSG", 3)
 DEVELOPER = "@JoseTLG"  # Bot developer
 REPOSITORY = "https://github.com/J-Rios/TLG_AntiJoin2SpamBot"  # Bot code repository
 DEV_PAYPAL = "https://www.paypal.me/josrios"  # Developer Paypal address
