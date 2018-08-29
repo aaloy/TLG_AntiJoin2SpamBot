@@ -444,7 +444,8 @@ def try_to_add_a_bot_event(bot, message, join_user, chat_id):
             except Exception as e:
                 log.debug("Exception when kicking a Bot - {}".format(str(e)))
                 if (str(e) == "Not enough rights to restrict/unrestrict chat member"):
-                    bot_message = TEXT[lang]["USER_CANT_ADD_BOT_CANT_KICK"].format(message.from_user.name, join_user.name)
+                    bot_message = TEXT[lang]["USER_CANT_ADD_BOT_CANT_KICK"].format(
+                        message.from_user.name, join_user.name)
 
             if get_chat_config(chat_id, "Call_admins_when_spam_detected"):
                 admins = get_admins_usernames_in_string(bot, chat_id)
@@ -584,7 +585,7 @@ def msg_nocmd(bot, update):
         call_admins_when_spam_detected = get_chat_config(
             chat_id, "Call_admins_when_spam_detected"
         )
-        # If user not yet register, it means it was there before the bot, 
+        # If user not yet register, it means it was there before the bot,
         # assume that is legit, add to users file, else, get his number of published msgs
         if not user_in_json(chat_id, user_id):
             # Register user and set "Num_messages" and "Join_date" to allow publish URLs
@@ -787,35 +788,23 @@ def cmd_commands(bot, update):
 
 
 def cmd_language(bot, update, args):
-    """Command /language message handler"""
+    """Command /language message handler. Defauts to the configuration
+    language if theris a problem or language does not exists."""
     chat_id = update.message.chat_id
     user_id = update.message.from_user.id
     chat_type = update.message.chat.type
     lang = get_chat_config(chat_id, "Language")
     allow_command = True
     if chat_type != "private":
-        is_admin = user_is_admin(bot, user_id, chat_id)
-        if is_admin is False:
-            allow_command = False
+        allow_command = user_is_admin(bot, user_id, chat_id)
     if allow_command:
-        if len(args) == 1:
-            lang_provided = args[0]
-            if lang_provided == "en" or lang_provided == "es":
-                lang_provided = lang_provided.upper()
-                if lang_provided != lang:
-                    lang = lang_provided
-                    save_config_property(chat_id, "Language", lang)
-                    bot_msg = TEXT[lang]["LANG_CHANGE"]
-                else:
-                    bot_msg = TEXT[lang]["LANG_SAME"]
-            else:
-                bot_msg = TEXT[lang]["LANG_BAD_LANG"]
-        else:
-            bot_msg = TEXT[lang]["LANG_NOT_ARG"]
-    elif is_admin is False:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
+        lang_provided = args[0] if (args is not None) and len(args) > 0 else conf.INIT_LANG
+        lang_provided = lang_provided.upper()
+        lang = lang_provided if lang_provided in conf.LANGUAGES else conf.INIT_LANG
+        save_config_property(chat_id, "Language", lang)
+        bot_msg = TEXT[lang]["LANG_CHANGE"]
     else:
-        bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
+        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     if chat_type == "private":
         bot.send_message(chat_id, bot_msg)
     else:
@@ -858,32 +847,27 @@ def cmd_set_messages(bot, update, args):
 
 
 def cmd_set_hours(bot, update, args):
-    """Command /set_hours message handler"""
+    """Command /set_hours message handler
+    Sets the waiting number of hours before allow a user to post an url
+    If the value is not valid returns to default.
+    """
     chat_id = update.message.chat_id
     user_id = update.message.from_user.id
     chat_type = update.message.chat.type
     lang = get_chat_config(chat_id, "Language")
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin is True:
-        if len(args) == 1:
-            hours_provided = args[0]
-            if hours_provided.isdigit():
-                hours_provided = int(hours_provided)
-                if hours_provided >= 0:
-                    save_config_property(
+    if is_admin:
+        hours_provided = args[0] if (args is not None) and len(args) > 0 else conf.INIT_TIME_ALLOW_URLS
+        try:
+            hours_provided = abs(int(hours_provided))
+        except ValueError:
+            hours_provided = conf.INIT_TIME_ALLOW_URLS
+        save_config_property(
                         chat_id, "Time_for_allow_urls_h", hours_provided
                     )
-                    bot_msg = TEXT[lang]["SET_HOURS_CHANGED"].format(hours_provided)
-                else:
-                    bot_msg = TEXT[lang]["SET_HOURS_NEGATIVE_HOUR"]
-            else:
-                bot_msg = TEXT[lang]["SET_HOURS_BAD_ARG"]
-        else:
-            bot_msg = TEXT[lang]["SET_HOURS_NOT_ARG"]
-    elif is_admin is False:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
+        bot_msg = TEXT[lang]["SET_HOURS_CHANGED"].format(hours_provided)
     else:
-        bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
+        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
     if chat_type == "private":
         bot.send_message(chat_id, bot_msg)
     else:
@@ -1043,7 +1027,7 @@ def cmd_allow_user(bot, update, args):
                     user_alias = "{} {}".format(user_alias, arg)
             user_data = get_user_from_alias(chat_id, user_alias)
             if user_data is not None:
-                if user_data["Allow_user"] is False:
+                if not user_data["Allow_user"]:
                     user_data["Allow_user"] = True
                     update_user(chat_id, user_data)
                     bot_msg = TEXT[lang]["CMD_ALLOW_USR_OK"].format(user_alias)
@@ -1186,7 +1170,7 @@ def cmd_test(bot, update):
     """Command for test purposes"""
     chat_id = update.message.chat_id
     chat_type = update.message.chat.type
-    info = "xx{}".format(get_admins_usernames_in_string(bot, chat_id))
+    info = "{}".format(get_admins_usernames_in_string(bot, chat_id))
     tlg_send_selfdestruct_msg(bot, chat_id, info)
 
 ####################################################################################################
@@ -1355,7 +1339,7 @@ def main():
     dp.add_handler(CommandHandler("notify_discard", cmd_notify_discard))
     dp.add_handler(CommandHandler("version", cmd_version))
     dp.add_handler(CommandHandler("about", cmd_about))
-    
+
     # Allow restar
     def stop_and_restart():
         """Gracefully stop the Updater and replace the current process with a new one"""
@@ -1366,7 +1350,7 @@ def main():
         update.message.reply_text('Bot is restarting...')
         Thread(target=stop_and_restart).start()
 
-    dp.add_handler(CommandHandler('r', restart, filters=Filters.user(username='@aaloy')))        
+    dp.add_handler(CommandHandler('r', restart, filters=Filters.user(username=conf.MANAGERS_LIST)))
     # Launch the Bot ignoring pending messages (clean=True)
     updater.start_polling(clean=True)
     # Handle self-messages delete

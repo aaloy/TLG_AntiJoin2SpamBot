@@ -31,6 +31,8 @@ needs to work properly. Please refer to the README file for more information."""
 # Constants
 # Bot Token (get it from @BotFather) this is mandatory
 TOKEN = conf.TELEGRAM_API_TOKEN
+# list of user ides o usernames allowed to reset the bot
+MANAGERS_LIST = conf.MANAGERS_LIST
 # Owner ID (The one that can send notify messages to all chats)
 OWNER_ID = getattr(conf, "OWNER_ID", 000000000)
 # Chat ID where the Bot is going to send debug messages
@@ -49,6 +51,8 @@ INIT_TITLE = getattr(conf, "INIT_TITLE", "Unknown Chat")
 INIT_LINK = getattr(conf, "INIT_LINK", "Unknown")
 # Initial language at Bot start
 INIT_LANG = getattr(conf, "INIT_LANG", "EN")
+# Allowed languages
+LANGUAGES = ["EN", "ES"]
 # Initial enable/disable status at Bot start
 INIT_ENABLE = getattr(conf, "INIT_ENABLE", True)
 # Initial hours until allow a user to publish URLs in messages
@@ -71,6 +75,7 @@ VERSION = "1.8.0"  # Bot version
 REGEX_URLS = "https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'"
 MAX_USERNAME_LENGTH = getattr(conf, "MAX_USERNAME_LENGTH", 30)
 MAX_USERNAME_ALIAS = getattr(conf, "MAX_USERNAME_ALIAS", 50)
+
 
 TEXT = {
     "EN": {
