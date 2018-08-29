@@ -550,33 +550,31 @@ def new_user(bot, update):
 def msg_nocmd(bot, update):
     """All Not-command messages handler"""
     global owner_notify
-    chat_id = update.message.chat_id
-    chat_type = update.message.chat.type
-    user_id = update.message.from_user.id
+    message = update.message
+    chat_id = message.chat_id
+    chat_type = message.chat.type
+    user_id = message.from_user.id
     lang = get_chat_config(chat_id, "Language")
     if chat_type == "private":
         if user_id == conf.OWNER_ID:
-            if owner_notify is True:
+            if owner_notify:
                 owner_notify = False
-                message = update.message.text
+                message = message.text
                 notify_all_chats(bot, message)
                 bot.send_message(chat_id, TEXT[lang]["CMD_NOTIFY_ALL_OK"])
     else:
-        chat_title = update.message.chat.title
+        chat_title = message.chat.title
         if chat_title:
             save_config_property(chat_id, "Title", chat_title)
-        chat_link = update.message.chat.username
+        chat_link = message.chat.username
         if chat_link:
             chat_link = "@{}".format(chat_link)
             save_config_property(chat_id, "Link", chat_link)
-        msg_id = update.message.message_id
-        user_name = update.message.from_user.name
-        msg_date = (update.message.date).now().strftime("%Y-%m-%d %H:%M:%S")
-        text = update.message.text
-        if text is None:
-            text = getattr(update.message, "caption_html", None)
-            if text is None:
-                text = getattr(update.message, "caption", None)
+        msg_id = message.message_id
+        user_name = message.from_user.name
+        msg_date = (message.date).now().strftime("%Y-%m-%d %H:%M:%S")
+        text = message.text
+        text = text if text is not None else getattr(message, "caption_html", getattr(message, "caption", None))
         enable = get_chat_config(chat_id, "Antispam")
         time_for_allow_urls_h = get_chat_config(chat_id, "Time_for_allow_urls_h")
         num_messages_for_allow_urls = get_chat_config(
@@ -603,12 +601,13 @@ def msg_nocmd(bot, update):
             if text is not None:
                 # If the user is not an Admin and the Bot Anti-Spam is enabled
                 is_admin = user_is_admin(bot, user_id, chat_id)
-                if (is_admin is False) and (enable is True):
+                if (not is_admin) and enable:
                     # If there is any URL in the message
-                    any_url = re.findall(conf.REGEX_URLS, text)
+                    extractor = URLExtract()
+                    any_url = extractor.has_urls(text)
                     if any_url:
                         # If user does not have allowed to publish
-                        if user_data["Allow_user"] is False:
+                        if not user_data["Allow_user"]:
                             num_published_messages = user_data["Num_messages"]
                             # Check user time in the group
                             user_join_date = user_data["Join_date"]
@@ -726,10 +725,9 @@ def msg_nocmd(bot, update):
                                 # Give user permission
                                 user_data["Allow_user"] = True
                                 update_user(chat_id, user_data)
-                # Truncate the message text to 500 characters
+                # Truncate the message text to 50 characters
                 if len(text) > 50:
-                    text = text[0:50]
-                    text = "{}...".format(text)
+                    text = "{}...".format(text)[0:50]
                 # Add the message to messages file
                 add_new_message(chat_id, msg_id, user_id, user_name, text, msg_date)
         # Remove from list all messages from 5h ago or more
@@ -819,26 +817,14 @@ def cmd_set_messages(bot, update, args):
     chat_type = update.message.chat.type
     lang = get_chat_config(chat_id, "Language")
     is_admin = user_is_admin(bot, user_id, chat_id)
-    if is_admin is True:
-        if len(args) == 1:
-            num_msgs_provided = args[0]
-            if num_msgs_provided.isdigit():
-                num_msgs_provided = int(num_msgs_provided)
-                if num_msgs_provided >= 0:
-                    save_config_property(
-                        chat_id, "Num_messages_for_allow_urls", num_msgs_provided
-                    )
-                    bot_msg = TEXT[lang]["SET_MSG_CHANGED"].format(num_msgs_provided)
-                else:
-                    bot_msg = TEXT[lang]["SET_MSG_NEGATIVE"]
-            else:
-                bot_msg = TEXT[lang]["SET_MSG_BAD_ARG"]
-        else:
-            bot_msg = TEXT[lang]["SET_MSG_NOT_ARG"]
-    elif is_admin is False:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
-    else:
-        bot_msg = TEXT[lang]["CAN_NOT_GET_ADMINS"]
+    if is_admin:
+        num_msgs_provided = args[0] if (args is not None) and len(args) > 0 else conf.INIT_MIN_MSG_ALLOW_URLS
+        try:
+            num_msgs_provided = abs(int(num_msgs_provided))
+        except ValueError:
+            num_msgs_provided = conf.INIT_MIN_MSG_ALLOW_URLS
+        save_config_property(chat_id, "Num_messages_for_allow_urls", num_msgs_provided)
+        bot_msg = TEXT[lang]["SET_MSG_CHANGED"].format(num_msgs_provided)
     if chat_type == "private":
         bot.send_message(chat_id, bot_msg)
     else:
