@@ -39,6 +39,7 @@ OWNER_ID = getattr(conf, "OWNER_ID", 000000000)
 DEBUG_TO_CHAT = getattr(conf, "DEBUG_TO_CHAT", 000000000)
 # Data directory path
 DATA_DIR = getattr(conf, "DATA_DIR", "./data")
+DATABASE_NAME = getattr(conf, "DATABASE_NAME", "bot.sqlite")
 # Chat JSON files name
 F_USERS = getattr(conf, "F_USERS", "users.json")
 # Messages JSON files name

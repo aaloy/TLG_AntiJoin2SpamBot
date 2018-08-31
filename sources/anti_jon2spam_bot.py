@@ -41,6 +41,7 @@ from user_info import user_is_admin
 # from pathlib import Path
 import constants as conf
 import logging
+import models
 
 # Globals ###
 DEBUG = getattr(conf, "DEBUG", False)
@@ -50,6 +51,7 @@ files_config_list = []
 to_delete_messages_list = []
 sent_antispam_messages_list = []
 owner_notify = False
+storage = models.Storage()
 
 log = logging.getLogger(__name__)
 
@@ -59,20 +61,8 @@ log = logging.getLogger(__name__)
 def signal_handler(signal, frame):
     """Termination signals (SIGINT, SIGTERM) handler for program process"""
     log.info("Closing the bot ...")
+    storage.db.close()
     sys.exit(1)
-
-    """
-    TODO: Not suer if this is required
-    # Acquire all messages and users files mutex to ensure not read/write operation on them
-    for chat_users_file in files_users_list:
-        chat_users_file["File"].lock.acquire()
-    for chat_messages_file in files_messages_list:
-        chat_messages_file["File"].lock.acquire()
-    for chat_config_file in files_config_list:
-        chat_config_file["File"].lock.acquire()
-    # Close the program
-    sys.exit(1)
-    """
 
 
 # Signals attachment ###
@@ -97,153 +87,6 @@ def debug_print_tlg(bot, text):
 
 
 ####################################################################################################
-
-# General functions
-
-
-def initialize_resources():
-    """Initialize resources by populating files list with chats found files"""
-    # Create data directory if it does not exists
-    if not path.exists(conf.DATA_DIR):
-        makedirs(conf.DATA_DIR)
-    else:
-        # If directory data exists, check all subdirectories names (chats ID)
-        files = listdir(conf.DATA_DIR)
-        if files:
-            for f_chat_id in files:
-                # Populate users files list
-                file_path = "{}/{}/{}".format(conf.DATA_DIR, f_chat_id, conf.F_USERS)
-                files_users_list.append(
-                    OrderedDict([("ID", f_chat_id), ("File", tsjson.TSjson(file_path))])
-                )
-                # Populate messages files list
-                file_path = "{}/{}/{}".format(conf.DATA_DIR, f_chat_id, conf.F_MSG)
-                files_messages_list.append(
-                    OrderedDict([("ID", f_chat_id), ("File", tsjson.TSjson(file_path))])
-                )
-                # Populate config files list
-                file_path = "{}/{}/{}".format(conf.DATA_DIR, f_chat_id, conf.F_CONF)
-                files_config_list.append(
-                    OrderedDict([("ID", f_chat_id), ("File", tsjson.TSjson(file_path))])
-                )
-                # Create default configuration file if it does not exists
-                if not path.exists(file_path):
-                    default_conf = get_default_config_data()
-                    for key, value in default_conf.items():
-                        save_config_property(f_chat_id, key, value)
-
-
-def get_chat_users_file(chat_id):
-    """Determine chat users file from the list by ID. Get the file if exists or create it if not"""
-    user = OrderedDict([("ID", chat_id), ("File", None)])
-    found = False
-    if files_users_list:
-        for chat_file in files_users_list:
-            if chat_file["ID"] == chat_id:
-                user = chat_file
-                found = True
-                break
-        if not found:
-            chat_users_file_name = "{}/{}/{}".format(
-                conf.DATA_DIR, chat_id, conf.F_USERS
-            )
-            user["ID"] = chat_id
-            user["File"] = tsjson.TSjson(chat_users_file_name)
-            files_users_list.append(user)
-    else:
-        chat_users_file_name = "{}/{}/{}".format(conf.DATA_DIR, chat_id, conf.F_USERS)
-        user["ID"] = chat_id
-        user["File"] = tsjson.TSjson(chat_users_file_name)
-        files_users_list.append(user)
-    return user["File"]
-
-
-def get_chat_messages_file(chat_id):
-    """Determine chat msgs file from the list by ID. Get the file if exists or create it if not"""
-    msg = OrderedDict([("ID", chat_id), ("File", None)])
-    found = False
-    if files_messages_list:
-        for chat_file in files_messages_list:
-            if chat_file["ID"] == chat_id:
-                msg = chat_file
-                found = True
-                break
-        if not found:
-            chat_messages_file_name = "{}/{}/{}".format(
-                conf.DATA_DIR, chat_id, conf.F_MSG
-            )
-            msg["File"] = tsjson.TSjson(chat_messages_file_name)
-            files_messages_list.append(msg)
-    else:
-        chat_messages_file_name = "{}/{}/{}".format(conf.DATA_DIR, chat_id, conf.F_MSG)
-        msg["File"] = tsjson.TSjson(chat_messages_file_name)
-        files_messages_list.append(msg)
-    return msg["File"]
-
-
-def get_chat_config_file(chat_id):
-    """Determine chat config file from the list by ID. Get the file
-    if exists or create it if not"""
-    configuration = OrderedDict([("ID", chat_id), ("File", None)])
-    found = False
-    if files_config_list:
-        for chat_file in files_config_list:
-            if chat_file["ID"] == chat_id:
-                configuration = chat_file
-                found = True
-                break
-        if not found:
-            chat_config_file_name = "{}/{}/{}".format(
-                conf.DATA_DIR, chat_id, conf.F_CONF
-            )
-            configuration["ID"] = chat_id
-            configuration["File"] = tsjson.TSjson(chat_config_file_name)
-            files_config_list.append(configuration)
-    else:
-        chat_config_file_name = "{}/{}/{}".format(conf.DATA_DIR, chat_id, conf.F_CONF)
-        configuration["ID"] = chat_id
-        configuration["File"] = tsjson.TSjson(chat_config_file_name)
-        files_config_list.append(configuration)
-    return configuration["File"]
-
-
-def get_default_config_data():
-    """Get default config data structure"""
-    config_data = OrderedDict(
-        [
-            ("Title", conf.INIT_TITLE),
-            ("Link", conf.INIT_LINK),
-            ("Language", conf.INIT_LANG),
-            ("Antispam", conf.INIT_ENABLE),
-            ("Time_for_allow_urls_h", conf.INIT_TIME_ALLOW_URLS),
-            ("Num_messages_for_allow_urls", conf.INIT_MIN_MSG_ALLOW_URLS),
-            ("Call_admins_when_spam_detected", conf.INIT_CALL_ADMINS_WHEN_SPAM),
-            ("Allow_users_to_add_bots", conf.INIT_ALLOW_USERS_ADD_BOTS),
-        ]
-    )
-    return config_data
-
-
-def save_config_property(chat_id, property, value):
-    """Store actual chat configuration in file"""
-    fjson_config = get_chat_config_file(chat_id)
-    config_data = fjson_config.read()
-    if not config_data:
-        config_data = get_default_config_data()
-    config_data[property] = value
-    fjson_config.write(config_data)
-
-
-def get_chat_config(chat_id, param):
-    """Get specific stored chat configuration property"""
-    chat_config = get_chat_config_file(chat_id)
-    if chat_config:
-        config_data = chat_config.read()
-        if not config_data:
-            config_data = get_default_config_data()
-    else:
-        config_data = get_default_config_data()
-    return config_data[param]
 
 
 def register_new_user(chat_id, user_id, user_name, join_date, allow_user):
@@ -463,36 +306,43 @@ def new_user(bot, update):
     message_id = message.message_id
     msg_from_user_id = message.from_user.id
     join_date = (message.date).now().strftime("%Y-%m-%d %H:%M:%S")
-    lang = get_chat_config(chat_id, "Language")
+    chat_config = storage.get_chat_config(chat_id)
+    lang = chat_config.language
     # For each new user that join or has been added
     for join_user in message.new_chat_members:
         join_user_id = join_user.id
         join_user_alias = join_user.name
         join_user_name = "{} {}".format(message.from_user.first_name, message.from_user.last_name)
+
         # If the added user is not myself (this Bot)
         if bot.id == join_user_id:
             # The Anti-Spam Bot has been added to a group
             anti_spam_bot_added_event(chat_id, bot, update)
+            continue
         else:
             to_register_user = True
-            # If the message user source is not the join user, it has been invited/added by another
+            # If the message user source is not the join user, 
+            # means it has been invited/added by another
             if msg_from_user_id != join_user_id and join_user.is_bot:
                 # If a user has added a bot check if could be added and delete id if not
                 to_register_user = try_to_add_a_bot_event(bot, msg_from_user_id, join_user, chat_id)
+                if not to_register_user:
+                    # if is not a legit bot log and no nothing
+                    log.warn('{msg_from_user_id} has tried to join {join_user} to  {chat_id}'.format(
+                        msg_from_user_id=msg_from_user_id,
+                        join_user=join_user,
+                        chat_id=chat_id
+                    ))
+                    continue
             # i
             if to_register_user:
                 # Check if there is an URL in the user name
                 extractor = URLExtract()
                 has_url = extractor.has_urls(join_user_name) or extractor.has_urls(join_user_alias)
                 if has_url:
-                    log.debug(
-                        "Spammer (URL name) join detected.\n  (Chat) - ({}).".format(
-                            chat_id
-                        )
-                    )
-                    if len(join_user_name) > 10:
-                        join_user_name = join_user_name[0:10]
-                        join_user_name = "{}...".format(join_user_name)
+                    log.warn("Spammer (URL name) join detected.\n  (Chat) - ({}).".format(chat_id))
+                    if len(join_user_name) > 15:
+                        join_user_name = "{}...".format(join_user_name)[0:10]
                     try:
                         bot.delete_message(chat_id, message_id)
                         bot_message = TEXT[lang]["USER_URL_NAME_JOIN"].format(
@@ -515,9 +365,8 @@ def new_user(bot, update):
                             bot.send_message(chat_id, bot_message)
                 else:
                     # Check if user name and last name are too long
-                    if len(join_user_name) > conf.MAX_USERNAME_LENGTH:
-                        join_user_name = join_user_name[0:10]
-                        join_user_name = "{}...".format(join_user_name)
+                    if len(join_user_name) > conf.MAX_USERNAME_LENGTH:                        
+                        join_user_name = "{}...".format(join_user_name)[0:10]
                         try:
                             bot.delete_message(chat_id, message_id)
                             bot_message = TEXT[lang]["USER_LONG_NAME_JOIN"].format(
@@ -538,11 +387,13 @@ def new_user(bot, update):
                                     "USER_LONG_NAME_JOIN_CANT_REMOVE"
                                 ].format(join_user_name)
                                 bot.send_message(chat_id, bot_message)
+                        continue
+
                 if len(join_user_alias) > conf.MAX_USERNAME_ALIAS:
-                    join_user_alias = join_user_alias[0:conf.MAX_USERNAME_ALIAS-3]
-                    join_user_alias = "{}...".format(join_user_alias)
-                if not user_in_json(chat_id, join_user_id):
-                    register_new_user(
+                    #if the alias is to large, just short it
+                    join_user_alias = "{}...".format(join_user_alias)[0:conf.MAX_USERNAME_ALIAS-3]
+
+                storage.register_new_user(
                         chat_id, join_user_id, join_user_alias, join_date, False
                     )
 
@@ -1276,7 +1127,7 @@ def main():
     """Main Function"""
     # Initialize resources by populating files list and configs with chats found files
     log.info("Launching Bot...")
-    initialize_resources()
+    
     # Create an event handler (updater) for a Bot with the given Token and get the dispatcher
     updater = Updater(conf.TOKEN)
     dp = updater.dispatcher
