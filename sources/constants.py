@@ -33,6 +33,8 @@ needs to work properly. Please refer to the README file for more information."""
 TOKEN = conf.TELEGRAM_API_TOKEN
 # list of user ides o usernames allowed to reset the bot
 MANAGERS_LIST = conf.MANAGERS_LIST
+#
+DEBUG = getattr(conf, "DEBUG", False)
 # Owner ID (The one that can send notify messages to all chats)
 OWNER_ID = getattr(conf, "OWNER_ID", 000000000)
 # Chat ID where the Bot is going to send debug messages
