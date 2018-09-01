@@ -327,10 +327,16 @@ def new_user(bot, update):
                     join_user_alias = "{}...".format(join_user_alias)[
                         0:conf.MAX_USERNAME_ALIAS - 3
                     ]
-
                 storage.register_new_user(
-                    chat_id, join_user_id, join_user_alias, join_date, False
+                    chat_id=chat_id,
+                    user_id=join_user_id,
+                    user_name=join_user_alias,
+                    first_name=join_user.first_name,
+                    last_name=join_user.last_name,
+                    join_date=join_date,
+                    allow_user=False
                 )
+                log.info('{} added to the group'.format(join_user_alias))
 
 
 def msg_nocmd(bot, update):
@@ -393,11 +399,17 @@ def msg_nocmd(bot, update):
                 else:
                     user.try_to_verify(chat_id, msg_date)
         except UserDoesNotExists:
+
             user = storage.register_new_user(
-                chat_id, user_id, user_name, msg_date, True
-            )
+                    chat_id=chat_id,
+                    user_id=user_id,
+                    user_name=user_name,
+                    first_name=message.from_user.first_name,
+                    last_name=message.from_user.last_name,
+                    join_date=datetime(1971, 1, 1),
+                    allow_user=True
+                )
             user.num_messages = chat_config.num_messages_for_allow_urls + 1
-            user.join_date = datetime(1971, 1, 1).strftime("%Y-%m-%d %H:%M:%S")
             user.save()
 
 
@@ -661,7 +673,7 @@ def cmd_allow_user(bot, update, args):
     user_id = update.message.from_user.id
     chat_config = storage.get_chat_config(chat_id)
     # command user
-    command_user = storage.get_user(user_id)
+    command_user = storage.get_user(user_id, chat_id)
     # destination_user
     destination_user_alias = _get_user_alias(args)
     lang = chat_config.language
@@ -905,9 +917,29 @@ def link_control(bot, update):
     for any restriction applied, the whole message is deleted.
     """
     chat_id = update.message.chat.id
+    chat_config = storage.get_chat_config(chat_id)
     msg_id = update.message.message_id
-    user_id = update.message.left_chat_member
-    user = storage.get_user(user_id, chat_id)
+    user_id = update.message.from_user.id
+
+    if not chat_config.enabled:
+        return
+
+    try:
+        user = storage.get_user(user_id, chat_id)
+    except UserDoesNotExists:
+        user_name = update.message.from_user.name
+        user = storage.register_new_user(
+                chat_id=chat_id,
+                user_id=user_id,
+                user_name=user_name,
+                first_name=update.message.from_user.first_name,
+                last_name=update.message.from_user.last_name,
+                join_date=datetime(1971, 1, 1),
+                allow_user=False
+            )
+        user.num_messages = chat_config.num_messages_for_allow_urls + 1
+        user.try_to_verify(chat_id, datetime(1971, 1, 1))
+        user.save()
 
     entities = update.message.parse_entities()
     log.info("Found {} links".format(len(entities.items())))

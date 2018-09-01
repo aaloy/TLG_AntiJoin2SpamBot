@@ -89,9 +89,9 @@ class User(BaseModel):
     user_name = CharField()
     join_date = DateTimeField(default=datetime.datetime.now)
     num_messages = IntegerField(default=0)
-    first_name = CharField()
-    last_name = CharField()
-    language_code = CharField()
+    first_name = CharField(default="")
+    last_name = CharField(default="")
+    language_code = CharField(default=conf.INIT_LANG)
     verified = BooleanField(default=False)
     created_date = DateTimeField(default=datetime.datetime.now)
 
@@ -117,7 +117,7 @@ class User(BaseModel):
 
     def is_admin(self, bot, chat_id):
         """Check if the specified user is an Administrator of a group given by IDs"""
-        chat = Chat.get_by_id(chat_id=chat_id)
+        chat = Chat.get_by_id(chat_id)
         return self.user_id in chat.get_chat_admins_ids(bot)
 
     def is_verified(self, chat_id):
@@ -198,10 +198,10 @@ class Config(BaseModel):
     time_for_allow_urls = IntegerField(default=conf.INIT_TIME_ALLOW_URLS)
     num_messages_for_allow_urls = IntegerField(default=conf.INIT_MIN_MSG_ALLOW_URLS)
     call_admins_when_spam_detected = BooleanField(
-        defautl=conf.INIT_CALL_ADMINS_WHEN_SPAM
+        default=conf.INIT_CALL_ADMINS_WHEN_SPAM
     )
     allow_users_to_add_bots = BooleanField(default=conf.INIT_ALLOW_USERS_ADD_BOTS)
-    enabled = BooleanField(defautl=True)
+    enabled = BooleanField(default=True)
 
     @property
     def min_messages(self):
@@ -220,6 +220,9 @@ class Config(BaseModel):
     def get_admins_usernames_in_string(self, bot):
         return self.chat.get_admins_usernames_in_string(bot)
 
+    def user_is_admin(self, bot, user_id):
+        return user_id in self.chat.get_chat_admins_ids(bot)
+
     class Meta:
         primary_key = CompositeKey("chat")
 
@@ -227,12 +230,14 @@ class Config(BaseModel):
 class Storage:
     def __init__(self):
         db.create_tables([Chat, Config, User, Message])
-        self.db = db.connect(reuse_if_open=True)
+        db.connect(reuse_if_open=True)
+        self.db = db
 
     def get_user(self, user_id, chat_id):
         chat, created = Chat.get_or_create(chat_id=chat_id)
         try:
-            User.get(User.chat == chat & User.user_id == user_id)
+            user = User.get(User.chat == chat_id, User.user_id == user_id)
+            return user
         except User.DoesNotExist:
             raise UserDoesNotExists
 
@@ -243,40 +248,37 @@ class Storage:
         """Get a user from its alias. Returns None if the
         user is not in the database, or the user object
         if she's found"""
-
         chat, created = Chat.get_or_create(chat_id=chat_id)
         try:
-            user = User.get(User.chat == chat & User.user_alias == user_alias)
+            user = User.get(User.chat == chat, User.user_name == user_alias)
             return user
         except User.DoesNotExist:
             raise UserDoesNotExists
 
-    def get_chat_config(chat_id):
+    def get_chat_config(self, chat_id):
         """Check if chat config exits, if not creates a
         new configuration with the defaults"""
-        return Config.get_or_create(chat_id)
+        chat, created = Chat.get_or_create(chat_id=chat_id)
+        config, created = Config.get_or_create(chat=chat)
+        return config
 
-    def register_new_user(self, chat_id, user_id, user_name, join_date, allow_user):
+    def register_new_user(
+        self, chat_id, user_id, user_name, first_name, last_name, join_date, allow_user
+    ):
         chat, created = Chat.get_or_create(chat_id=chat_id)
         user, created = User.get_or_create(
             chat=chat,
             user_id=user_id,
-            user_name=user_name,
-            num_messages=0,
-            join_date=join_date,
-            last_name="",
-            language_code=conf.INIT_LANG,
+            defaults={
+                "user_name": user_name,
+                "num_messages": 0,
+                "join_date": join_date,
+                "first_name": first_name,
+                "last_name": last_name,
+                "language_code": conf.INIT_LANG,
+            },
         )
         return user
-
-    def save_user(chat_id, user):
-        pass
-
-    def save_config(chat_id, config):
-        pass
-
-    def add_message(chat_id, msg):
-        pass
 
 
 if __name__ == "__main__":
