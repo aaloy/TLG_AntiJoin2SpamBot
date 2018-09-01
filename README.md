@@ -1,8 +1,41 @@
-# TLG_AntiJoin2SpamBot
+# ajsbot
 
-THIS IS WORK IN PROGRESS, please use the original repo
+This code is a fork for the original https://github.com/J-Rios/TLG_AntiJoin2SpamBot
+from which I have made a re-rewite of some parts to make the code PEP8 compliant
+and more Pythonic.
 
-Telegram Bot that figth against the spammer users that join groups to spam their annoying and unwanted info.
+### Improvements
+
+* Added a configuration file config.py that the administrators could tune to add the bot parameters. Contants.py has
+now sensible default values.
+
+* Improved the link detection:
+	* added [urlextract](https://github.com/lipoja/URLExtract) to check for links in username.
+	* use telegram to check for links in messages, addding a filter to check the messages and decide if they are spam or not.
+* Refactored the whole configuration to a sqlite database by default. Using [Peewee](http://docs.peewee-orm.com/en/latest/) ORM to access the data, so it can be moved to any other Peewee database in the future.
+
+* Simplified and refactored most code to avoid writing and searching in json files.
+
+* Installation throught Pipfile so allows pipenv to run the bot itself.
+
+* Added logger
+
+* Bot rename, first to lower case, then to a new different name.
+
+### TODO
+
+* More cleaning and refactoring. Check for unused functions and duplicated code.
+* Move to gettext files for message translation
+* Split bot code in modules:
+	* commands
+	* messages
+	* exceptions
+* Add more options to restrict users
+* Add a fast command to delete the last message and restrict the user.
+
+
+
+
 
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -15,37 +48,50 @@ apt-get install python3
 apt-get install python3-pip
 pip3 install --upgrade pip
 pip3 install --upgrade setuptools
+pip3 install pipenv
 ```
 
-2 - Install python-telegram-bot library using python3-pip tool:
-```
-pip3 install python-telegram-bot --upgrade
-exit
-```
-
-3 - Download Bot repository and go inside sources directory:
-```git clone https://github.com/J-Rios/TLG_AntiJoin2SpamBot
+2 - Download Bot repository and go inside sources directory:
+```git clone https://github.com/aaloy/TLG_AntiJoin2SpamBot
 cd TLG_AntiJoin2SpamBot/sources
+pipenv --python 3
+pipenv shell
+pipenv install
+```
+
+1. Create your custom configuration file from the template
+```
+	cp config.py.template config.py
 ```
 
 4 - Change the TOKEN line of Constants file to set the TOKEN of your Bot account (from @BotFather):
+
 ```
-nano Constants.py
+nano config.py
 [Change this line -> 'TOKEN' : 'XXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX']
 ```
+
+in `constants.py` you can find the parameters and defaults that you can configure. Just add the to `config.py` with their values.
+
 
 5 - Run the Bot:
 ```
 A - Run it at normal:
-	python3 Anti_Join2Spam_Bot.py
+	python3 ajsbot.py
 
 B - Run it in background and unassociated to actual tty (preserve execution when terminal/console is closed):
-	nohup python3 Anti_Join2Spam_Bot.py &
+	nohup python3 ajsbot.py &
+
+C - Use screen/byobu to run in your server
+
+D - Install in a virtual machine o virtual server
 ```
 
 6 - Enjoy of a Telegram free of "join2spam" users ;)
 
 -------------------------------------------------------------------------------------------------------------------------
+
+Note: If you install the bot (as me) on a RPi and use pipenv you'll have some warnings and errors about packages signatures. This seems a problem with pipenv and hashes for different architectures.
 
 ## Bot help:
 
@@ -104,3 +150,12 @@ B - Run it in background and unassociated to actual tty (preserve execution when
 - This Bot uses [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot) library.
 
 - This Bot was developed using Python 3.6.
+
+
+## Contribute:
+
+This code is open to contributions and improvements. As the original code the goal is to create a bot that has one task, the spam control, so tasks and improvements not related to this are not going to be included.
+
+I usually code at evenings, after work and on weekends, so if you have a question, new feature, merge request, etc. please week at least one week before thinking nobody is at home.
+
+If you need a custom bot or any kind of python development the apsl.net team is available for projects.
