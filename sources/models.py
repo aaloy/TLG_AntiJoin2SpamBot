@@ -2,7 +2,6 @@
 from peewee import (
     SqliteDatabase,
     Model,
-    IntegrityError,
     BooleanField,
     CompositeKey,
     CharField,
@@ -15,6 +14,9 @@ import datetime
 import constants as conf
 import logging
 from pathlib import Path
+from urlextract import URLExtract
+from exceptions import UserDoesNotExists
+
 
 log = logging.getLogger(__name__)
 db_path = "{}".format((Path(conf.DATA_DIR) / conf.DATABASE_NAME).resolve())
@@ -44,6 +46,42 @@ class Chat(BaseModel):
     chat_id = BigIntegerField(primary_key=True)
     created_date = DateTimeField(default=datetime.datetime.now)
 
+    def get_chat_admins_ids(self, bot):
+        """Returns a list with the ids of the administrators
+        for the given chat_id and bot
+        """
+        try:
+            return [x.user.id for x in bot.get_chat_administrators(self.chat_id)]
+        except Exception as e:
+            log.error("Unable to get administrators for {}".format(self.chat_id))
+            log.error(e)
+            return []
+
+    def get_admins_usernames_in_string(self, bot):
+        """Get all the group Administrators usernames/alias in a single line string separed by \' \'"""
+        try:
+            group_admins = bot.get_chat_administrators(self.chat_id)
+        except Exception as e:
+            log.debug(
+                "Exception when checking Admins of {} - {}".format(self.chat_id, str(e))
+            )
+            return None
+        list_admins_names = sorted(
+            [
+                "@{}".format(admin.user.username)
+                for admin in group_admins
+                if not admin.user.is_bot
+            ]
+        )
+        return "\n".join(list_admins_names)
+
+    def user_is_admin(self, bot, user_id):
+        """Check if the specified user is an Administrator of a group given by IDs"""
+        return user_id in self.get_chat_admins_ids(bot, self.chat_id)
+
+    def bot_is_admin(self, bot):
+        return bot.id in self.get_chat_admins_ids(bot, self.chat_id)
+
 
 class User(BaseModel):
     chat = ForeignKeyField(Chat, backref="users")
@@ -51,18 +89,92 @@ class User(BaseModel):
     user_name = CharField()
     join_date = DateTimeField(default=datetime.datetime.now)
     num_messages = IntegerField(default=0)
+    first_name = CharField()
     last_name = CharField()
     language_code = CharField()
+    verified = BooleanField(default=False)
     created_date = DateTimeField(default=datetime.datetime.now)
 
-    def is_url_allowed(self):
+    def can_post_links(self):
         """The user is allowed to post urls if:
             a) is group admin
-            b) is a new user that not has been joined recently 
+            b) is a new user that not has been joined recently
             thats is more than INIT_TIME_ALLOW_URLS minutes ago.
-            c) is a new user who has posts more that 
+            c) is a new user who has posts more that
             INIT_MIN_MSG_ALLOW_URLS posts
         """
+        if self.is_admin or self.is_verified:
+            return True
+        chat_config = Config.get(chat_id=self.chat.chat_id)
+
+        user_hours_in_group = (
+            datetime.datetime.now() - self.join_date
+        ).total_seconds() // 3600
+
+        return (user_hours_in_group >= chat_config.time_for_allow_urls) or (
+            self.num_messages >= chat_config.num_messages_for_allow_urls
+        )
+
+    def is_admin(self, bot, chat_id):
+        """Check if the specified user is an Administrator of a group given by IDs"""
+        chat = Chat.get_by_id(chat_id=chat_id)
+        return self.user_id in chat.get_chat_admins_ids(bot)
+
+    def is_verified(self, chat_id):
+        chat = Chat.get_by_id(chat_id=chat_id)
+        try:
+            user = User.get(chat=chat, user_id=self.user_id)
+            return user.verified
+        except User.DoesNotExist:
+            return None
+
+    def update_message_counter(self, chat_id, delta=1):
+        User.update(num_messages=User.num_messages + delta).where(
+            User.user_id == self.user_id, User.chat.chat_id == chat_id
+        )
+
+    def try_to_verify(self, chat_id, msg_date):
+        """Check if we can mark a user as verified"""
+        if self.is_admin or self.is_verified:
+            return False
+        chat_config = Config.get(chat_id=chat_id)
+        user_hours_in_group = (msg_date - self.join_date).total_seconds() // 3600
+        verified = (user_hours_in_group >= chat_config.time_for_allow_urls) or (
+            self.num_messages >= chat_config.num_messages_for_allow_urls
+        )
+        if verified:
+            self.verified = True
+            self.save()
+
+    def is_spammer(self, chat_id, msg_date, text):
+        """User is not enabled to post links due to his join date or the
+        number of messages, and his still trying
+        The user is allowed to post urls if:
+            a) is group admin
+            b) is a new user that not has been joined recently
+            thats is more than INIT_TIME_ALLOW_URLS minutes ago.
+            c) is a new user who has posts more that
+            INIT_MIN_MSG_ALLOW_URLS posts
+        """
+
+        if self.is_admin or self.is_verified:
+            return False
+        chat_config = Config.get(chat_id=chat_id)
+
+        # Let's check for urls
+        extractor = URLExtract()
+        any_url = extractor.has_urls(text)
+        if not any_url:
+            # if no url posted we'll give him the benefit of doubt
+            return False
+
+        # OK he has posts urls
+        # Check if allowed by time or num os posted messages
+
+        user_hours_in_group = (msg_date - self.join_date).total_seconds() // 3600
+        return (user_hours_in_group < chat_config.time_for_allow_urls) or (
+            self.num_messages < chat_config.num_messages_for_allow_urls
+        )
 
     class Meta:
         primary_key = CompositeKey("chat", "user_id")
@@ -89,6 +201,7 @@ class Config(BaseModel):
         defautl=conf.INIT_CALL_ADMINS_WHEN_SPAM
     )
     allow_users_to_add_bots = BooleanField(default=conf.INIT_ALLOW_USERS_ADD_BOTS)
+    enabled = BooleanField(defautl=True)
 
     @property
     def min_messages(self):
@@ -101,8 +214,11 @@ class Config(BaseModel):
         return self.time_for_allow_urls
 
     @property
-    def warn_admin(self):
+    def warn_admins(self):
         return self.call_admins_when_spam_detected
+
+    def get_admins_usernames_in_string(self, bot):
+        return self.chat.get_admins_usernames_in_string(bot)
 
     class Meta:
         primary_key = CompositeKey("chat")
@@ -113,24 +229,46 @@ class Storage:
         db.create_tables([Chat, Config, User, Message])
         self.db = db.connect(reuse_if_open=True)
 
-    def get_user(user_id, chat_id):
-        return User.get(User.chat_id == chat_id & User.user_id == user_id)
+    def get_user(self, user_id, chat_id):
+        chat, created = Chat.get_or_create(chat_id=chat_id)
+        try:
+            User.get(User.chat == chat & User.user_id == user_id)
+        except User.DoesNotExist:
+            raise UserDoesNotExists
+
+    def get_chats(self):
+        return Chat.select()
+
+    def get_user_from_alias(self, chat_id, user_alias):
+        """Get a user from its alias. Returns None if the
+        user is not in the database, or the user object
+        if she's found"""
+
+        chat, created = Chat.get_or_create(chat_id=chat_id)
+        try:
+            user = User.get(User.chat == chat & User.user_alias == user_alias)
+            return user
+        except User.DoesNotExist:
+            raise UserDoesNotExists
 
     def get_chat_config(chat_id):
-        return Config.get(Config.chat_id == chat_id)
+        """Check if chat config exits, if not creates a
+        new configuration with the defaults"""
+        return Config.get_or_create(chat_id)
 
     def register_new_user(self, chat_id, user_id, user_name, join_date, allow_user):
-        user, created = User.get_or_create(chat.id=chat_id,
-                                            user_id=user_id,
-                                            user_name=user_name,
-                                            join_date=join_date,
-                                            num_messages=0,
-                                            join_date=join_date,
-                                            last_name='',
-                                            language_code=conf.INIT_LANG
-            )
+        chat, created = Chat.get_or_create(chat_id=chat_id)
+        user, created = User.get_or_create(
+            chat=chat,
+            user_id=user_id,
+            user_name=user_name,
+            num_messages=0,
+            join_date=join_date,
+            last_name="",
+            language_code=conf.INIT_LANG,
+        )
         return user
-        
+
     def save_user(chat_id, user):
         pass
 

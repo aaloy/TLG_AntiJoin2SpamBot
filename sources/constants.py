@@ -33,6 +33,8 @@ needs to work properly. Please refer to the README file for more information."""
 TOKEN = conf.TELEGRAM_API_TOKEN
 # list of user ides o usernames allowed to reset the bot
 MANAGERS_LIST = conf.MANAGERS_LIST
+# If true activates debug messages
+DEBUG = getattr(conf, "DEBUG", False)
 # Owner ID (The one that can send notify messages to all chats)
 OWNER_ID = getattr(conf, "OWNER_ID", 000000000)
 # Chat ID where the Bot is going to send debug messages
@@ -443,7 +445,7 @@ TEXT = {
         "CALL_WHEN_SPAM_DISABLE": "Desactivada la llamada automática a los Admins cuando se detecta Spam.",
         "CALL_WHEN_SPAM_ALREADY_ENABLE": "La llamada a los Admins cuando se detecta Spam ya está activada.",
         "CALL_WHEN_SPAM_ALREADY_DISABLE": "La llamada a los Admins cuando se detecta Spam ya está desactivada.",
-        "CALL_WHEN_SPAM_NOT_ARG": "El comando requiere el parámetro enable/disable.\n"
+        "CALL_WHEN_SPAM_NOT_ARG": "El comando requiere el parámetro enable/disable.\nRestableciendo valor por defecto\n"
         "\n"
         "Ejemplo:\n"
         "/call_when_spam enable\n"
@@ -452,7 +454,7 @@ TEXT = {
         "USERS_ADD_BOTS_DISABLE": "Desactivado el permiso de los usuarios para añadir Bots al grupo.",
         "USERS_ADD_BOTS_ALREADY_ENABLE": "El permiso de los usuarios para añadir Bots ya está activado.",
         "USERS_ADD_BOTS_ALREADY_DISABLE": "El permiso de los usuarios para añadir Bots ya está desactivado.",
-        "USERS_ADD_BOTS_NOT_ARG": "El comando requiere el parámetro enable/disable.\n"
+        "USERS_ADD_BOTS_NOT_ARG": "El comando requiere el parámetro enable/disable.\nRestableciendo valor por defecto\n"
         "\n"
         "Ejemplo:\n"
         "/users_add_bots enable\n"
