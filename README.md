@@ -75,11 +75,14 @@ in `constants.py` you can find the parameters and defaults that you can configur
 
 
 5 - Run the Bot:
+
 ```
 A - Run it at normal:
 	python3 ajsbot.py
 
-B - Run it in background and unassociated to actual tty (preserve execution when terminal/console is closed):
+B - Run it in background and unassociated to actual tty
+(preserve execution when terminal/console is closed):
+
 	nohup python3 ajsbot.py &
 
 C - Use screen/byobu to run in your server
@@ -159,3 +162,7 @@ This code is open to contributions and improvements. As the original code the go
 I usually code at evenings, after work and on weekends, so if you have a question, new feature, merge request, etc. please week at least one week before thinking nobody is at home.
 
 If you need a custom bot or any kind of python development the apsl.net team is available for projects.
+
+# Disclaimer
+
+Use at your own risk.
