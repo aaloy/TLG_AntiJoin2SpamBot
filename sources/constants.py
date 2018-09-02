@@ -70,8 +70,10 @@ INIT_ALLOW_USERS_ADD_BOTS = getattr(conf, "INIT_ALLOW_USERS_ADD_BOTS", False)
 T_DEL_MSG = getattr(conf, "T_DEL_MSG", 3)
 # Save messages for each chat
 SAVE_CHAT_MESSAGES = getattr(conf, "SAVE_CHAT_MESSAGES", True)
-DEVELOPER = "@JoseTLG"  # Bot developer
-REPOSITORY = "https://github.com/J-Rios/TLG_AntiJoin2SpamBot"  # Bot code repository
+DEVELOPER = "@JoseTLG & @aaloy"  # Bot developer
+REPOSITORY = (
+    "https://https://github.com/J-Rios/TLG_AntiJoin2SpamBot \n "
+)  # Bot code repository
 DEV_PAYPAL = "https://www.paypal.me/josrios"  # Developer Paypal address
 DEV_BTC = "3N9wf3FunR6YNXonquBeWammaBZVzTXTyR"  # Developer Bitcoin address
 VERSION = "1.8.0"  # Bot version

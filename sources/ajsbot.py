@@ -46,12 +46,12 @@ import models
 
 # Globals ###
 DEBUG = getattr(conf, "DEBUG", False)
-files_users_list = []
-files_messages_list = []
-files_config_list = []
+
 to_delete_messages_list = []
 sent_antispam_messages_list = []
 owner_notify = False
+
+# Start the storage
 storage = models.Storage()
 
 log = logging.getLogger(__name__)
@@ -219,6 +219,7 @@ def try_to_add_a_bot_event(bot, message, join_user, chat_id):
 
 def new_user(bot, update):
     """New member join the group event handler"""
+
     message = update.message
     chat_id = message.chat_id
     chat_config = storage.get_chat_config(chat_id)
@@ -226,7 +227,7 @@ def new_user(bot, update):
         return
     message_id = message.message_id
     msg_from_user_id = message.from_user.id
-    join_date = (message.date).now().strftime("%Y-%m-%d %H:%M:%S")
+    join_date = message.date
 
     lang = chat_config.language
     # For each new user that join or has been added
@@ -234,7 +235,7 @@ def new_user(bot, update):
         join_user_id = join_user.id
         join_user_alias = join_user.name
         join_user_name = "{} {}".format(
-            message.from_user.first_name, message.from_user.last_name
+            join_user.first_name, join_user.last_name
         )
 
         # If the added user is not myself (this Bot)
@@ -261,7 +262,6 @@ def new_user(bot, update):
                         )
                     )
                     continue
-            # i
             if to_register_user:
                 # Check if there is an URL in the user name
                 extractor = URLExtract()
@@ -295,7 +295,8 @@ def new_user(bot, update):
                             bot_message = TEXT[lang][
                                 "USER_URL_NAME_JOIN_CANT_REMOVE"
                             ].format(join_user_name)
-                            bot.send_message(chat_id, bot_message)
+                            tlg_send_selfdestruct_msg(bot, chat_id, bot_message)
+                    continue
                 else:
                     # Check if user name and last name are too long
                     if len(join_user_name) > conf.MAX_USERNAME_LENGTH:
@@ -305,13 +306,13 @@ def new_user(bot, update):
                             bot_message = TEXT[lang]["USER_LONG_NAME_JOIN"].format(
                                 join_user_name
                             )
-                            log.debug(
+                            log.info(
                                 "Spammer (long name) join message successfully removed.\n"
                                 "  (Chat) - ({}).".format(chat_id)
                             )
-                            tlg_send_selfdestruct_msg(bot, chat_id, bot_message)
+
                         except Exception as e:
-                            log.debug(
+                            log.error(
                                 "Exception when deleting a Spammer (long name) join "
                                 "message - {}".format(str(e))
                             )
@@ -319,15 +320,16 @@ def new_user(bot, update):
                                 bot_message = TEXT[lang][
                                     "USER_LONG_NAME_JOIN_CANT_REMOVE"
                                 ].format(join_user_name)
-                                bot.send_message(chat_id, bot_message)
-                        continue
+
+                        tlg_send_selfdestruct_msg(bot, chat_id, bot_message)
 
                 if len(join_user_alias) > conf.MAX_USERNAME_ALIAS:
                     # if the alias is to large, just short it
                     join_user_alias = "{}...".format(join_user_alias)[
                         0:conf.MAX_USERNAME_ALIAS - 3
                     ]
-                storage.register_new_user(
+
+            storage.register_new_user(
                     chat_id=chat_id,
                     user_id=join_user_id,
                     user_name=join_user_alias,
@@ -336,7 +338,7 @@ def new_user(bot, update):
                     join_date=join_date,
                     allow_user=False
                 )
-                log.info('{} added to the group'.format(join_user_alias))
+            log.info('{} added to the group'.format(join_user_alias))
 
 
 def msg_nocmd(bot, update):
@@ -411,6 +413,50 @@ def msg_nocmd(bot, update):
                 )
             user.num_messages = chat_config.num_messages_for_allow_urls + 1
             user.save()
+
+
+def link_control(bot, update):
+    """ This hook control if a user can post links or not
+    in a message group. If the user is not allowed to post link,
+    for any restriction applied, the whole message is deleted.
+    """
+    chat_id = update.message.chat.id
+    chat_config = storage.get_chat_config(chat_id)
+    msg_id = update.message.message_id
+    user_id = update.message.from_user.id
+
+    if not chat_config.enabled:
+        return
+
+    try:
+        user = storage.get_user(user_id, chat_id)
+    except UserDoesNotExists:
+        user_name = update.message.from_user.name
+        user = storage.register_new_user(
+                chat_id=chat_id,
+                user_id=user_id,
+                user_name=user_name,
+                first_name=update.message.from_user.first_name,
+                last_name=update.message.from_user.last_name,
+                join_date=datetime(1971, 1, 1),
+                allow_user=False
+            )
+        user.num_messages = chat_config.num_messages_for_allow_urls + 1
+        user.try_to_verify(chat_id, datetime(1971, 1, 1))
+        user.save()
+
+    entities = update.message.parse_entities()
+    log.info("Found {} links".format(len(entities.items())))
+    if not user.can_post_links(bot):
+        log.info("User {} can't post links in {}".format(user_id, chat_id))
+        try:
+            result = bot.delete_message(chat_id, msg_id)
+        except BadRequest:
+            result = False
+        if result:
+            log.info("Message {} deleted".format(msg_id))
+        else:
+            log.error("Error deleting msg {}".format(msg_id))
 
 
 ####################################################################################################
@@ -670,6 +716,7 @@ def cmd_allow_user(bot, update, args):
         and changes the destination user configuration."""
 
     chat_id = update.message.chat_id
+    chat_type = update.message.chat.type
     user_id = update.message.from_user.id
     chat_config = storage.get_chat_config(chat_id)
     # command user
@@ -678,13 +725,13 @@ def cmd_allow_user(bot, update, args):
     destination_user_alias = _get_user_alias(args)
     lang = chat_config.language
 
-    if command_user.is_admin(bot, chat_id):
+    if command_user.is_admin(bot):
         try:
             destination_user = storage.get_user_from_alias(
                 chat_id, destination_user_alias
             )
-            if not destination_user:
-                destination_user.allow_user = True
+            if not destination_user.verified:
+                destination_user.verified = True
                 destination_user.save()
                 bot_msg = TEXT[lang]["CMD_ALLOW_USR_OK"].format(destination_user_alias)
             else:
@@ -695,7 +742,12 @@ def cmd_allow_user(bot, update, args):
             bot_msg = TEXT[lang]["CMD_ALLOW_USR_NOT_FOUND"]
     else:
         bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
-    bot.send_message(chat_id, bot_msg)
+
+    if chat_type == "private":
+        bot.send_message(chat_id, bot_msg)
+    else:
+        tlg_msg_to_selfdestruct(bot, update.message)
+        tlg_send_selfdestruct_msg(bot, chat_id, bot_msg)
 
 
 def cmd_enable(bot, update):
@@ -909,50 +961,6 @@ def selfdestruct_messages(bot):
                     to_delete_messages_list.remove(sent_msg)
         # Wait 10s (release CPU usage)
         sleep(10)
-
-
-def link_control(bot, update):
-    """ This hook control if a user can post links or not
-    in a message group. If the user is not allowed to post link,
-    for any restriction applied, the whole message is deleted.
-    """
-    chat_id = update.message.chat.id
-    chat_config = storage.get_chat_config(chat_id)
-    msg_id = update.message.message_id
-    user_id = update.message.from_user.id
-
-    if not chat_config.enabled:
-        return
-
-    try:
-        user = storage.get_user(user_id, chat_id)
-    except UserDoesNotExists:
-        user_name = update.message.from_user.name
-        user = storage.register_new_user(
-                chat_id=chat_id,
-                user_id=user_id,
-                user_name=user_name,
-                first_name=update.message.from_user.first_name,
-                last_name=update.message.from_user.last_name,
-                join_date=datetime(1971, 1, 1),
-                allow_user=False
-            )
-        user.num_messages = chat_config.num_messages_for_allow_urls + 1
-        user.try_to_verify(chat_id, datetime(1971, 1, 1))
-        user.save()
-
-    entities = update.message.parse_entities()
-    log.info("Found {} links".format(len(entities.items())))
-    if not user.can_post_links():
-        log.info("User {} can't post links in {}".format(user_id, chat_id))
-        try:
-            result = bot.delete_message(chat_id, msg_id)
-        except BadRequest:
-            result = False
-        if result:
-            log.info("Message {} deleted".format(msg_id))
-        else:
-            log.error("Error deleting msg {}".format(msg_id))
 
 
 ####################################################################################################

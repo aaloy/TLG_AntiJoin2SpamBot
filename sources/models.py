@@ -17,9 +17,11 @@ from pathlib import Path
 from urlextract import URLExtract
 from exceptions import UserDoesNotExists
 
-
 log = logging.getLogger(__name__)
 db_path = "{}".format((Path(conf.DATA_DIR) / conf.DATABASE_NAME).resolve())
+
+
+log.info("Connecting to {}".format(db_path))
 
 db = SqliteDatabase(
     db_path,
@@ -34,7 +36,7 @@ db = SqliteDatabase(
 
 
 log.info("connecting to database {}".format(db_path))
-db.connect()
+db.connect(reuse_if_open=True)
 
 
 class BaseModel(Model):
@@ -95,7 +97,7 @@ class User(BaseModel):
     verified = BooleanField(default=False)
     created_date = DateTimeField(default=datetime.datetime.now)
 
-    def can_post_links(self):
+    def can_post_links(self, bot):
         """The user is allowed to post urls if:
             a) is group admin
             b) is a new user that not has been joined recently
@@ -103,7 +105,7 @@ class User(BaseModel):
             c) is a new user who has posts more that
             INIT_MIN_MSG_ALLOW_URLS posts
         """
-        if self.is_admin or self.is_verified:
+        if self.is_admin(bot) or self.is_verified:
             return True
         chat_config = Config.get(chat_id=self.chat.chat_id)
 
@@ -115,13 +117,14 @@ class User(BaseModel):
             self.num_messages >= chat_config.num_messages_for_allow_urls
         )
 
-    def is_admin(self, bot, chat_id):
+    def is_admin(self, bot):
         """Check if the specified user is an Administrator of a group given by IDs"""
-        chat = Chat.get_by_id(chat_id)
+        chat = Chat.get_by_id(self.chat.chat_id)
         return self.user_id in chat.get_chat_admins_ids(bot)
 
-    def is_verified(self, chat_id):
-        chat = Chat.get_by_id(chat_id=chat_id)
+    @property
+    def is_verified(self):
+        chat = Chat.get_by_id(self.chat.chat_id)
         try:
             user = User.get(chat=chat, user_id=self.user_id)
             return user.verified
