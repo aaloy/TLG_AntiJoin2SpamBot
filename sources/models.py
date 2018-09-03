@@ -97,6 +97,17 @@ class User(BaseModel):
     verified = BooleanField(default=False)
     created_date = DateTimeField(default=datetime.datetime.now)
 
+    def penalize(self, bot):
+        """Penalize a user without baning him. On this way
+        he would have the same treatement than a new and potential
+        spammer user"""
+
+        self.verified = False
+        self.join_date = datetime.now()
+        self.num_message = 0
+        self.save()
+        log.info("User: {} has been penalized".format(self.user_name))
+
     def can_post_links(self, bot):
         """The user is allowed to post urls if:
             a) is group admin
@@ -113,9 +124,14 @@ class User(BaseModel):
             datetime.datetime.now() - self.join_date
         ).total_seconds() // 3600
 
-        return (user_hours_in_group >= chat_config.time_for_allow_urls) or (
+        value = (user_hours_in_group >= chat_config.time_for_allow_urls) or (
             self.num_messages >= chat_config.num_messages_for_allow_urls
         )
+        if value and not self.is_verified:
+            # if the user can post links mark it as verified
+            self.verified = True
+            self.save()
+        return value
 
     def is_admin(self, bot):
         """Check if the specified user is an Administrator of a group given by IDs"""
