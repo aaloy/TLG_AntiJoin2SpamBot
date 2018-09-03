@@ -32,11 +32,11 @@ from datetime import datetime
 from time import time, sleep
 from constants import TEXT
 from collections import OrderedDict
-from telegram import MessageEntity
+from telegram import MessageEntity, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.error import BadRequest
 from urlextract import URLExtract
-from utils import user_is_admin
+from utils import user_is_admin, set_language
 from exceptions import UserDoesNotExists
 
 # from pathlib import Path
@@ -46,6 +46,13 @@ import models
 
 # Globals ###
 DEBUG = getattr(conf, "DEBUG", False)
+
+
+def _(message):
+    return message
+
+del _
+
 
 to_delete_messages_list = []
 sent_antispam_messages_list = []
@@ -149,7 +156,7 @@ def anti_spam_bot_added_event(chat_id, bot, update):
     notify_msg = "The Bot has been added to a new group:\n\n- ID: {}\n".format(chat_id)
     chat_title = update.message.chat.title
     if chat_title:
-        chat_config.titel = chat_title
+        chat_config.title = chat_title
         notify_msg = "{}- Title: {}\n".format(notify_msg, chat_title)
     else:
         notify_msg = "{}- Title: Unknown\n".format(notify_msg)
@@ -165,7 +172,9 @@ def anti_spam_bot_added_event(chat_id, bot, update):
     notify_msg = "{}- Admin: {} [{}]".format(notify_msg, admin_name, admin_id)
     debug_print_tlg(bot, notify_msg)
     # Send bot join message
-    bot_message = TEXT[lang]["ANTI-SPAM_BOT_ADDED_TO_GROUP"]
+    bot_message = _("Hello, I am a Bot that fight against Spammers that join groups to publish their\n"
+                    "annoying and unwanted info. To work properly, give me Admin privileges.\n"
+                    "Check /help command for more information about my usage.""")
     chat_config.save()
     bot.send_message(chat_id, bot_message)
 
@@ -884,8 +893,14 @@ def cmd_test(bot, update):
     """Command for test purposes"""
     chat_id = update.message.chat_id
     chat_config = storage.get_chat_config(chat_id)
-    info = "{}".format(chat_config.get_admins_usernames_in_string(bot))
+    set_language(chat_config.language)
+    info = _("These are the admins {}").format(chat_config.get_admins_usernames_in_string(bot))
     tlg_send_selfdestruct_msg(bot, chat_id, info)
+    other_info = _("this *is* \n"
+                   "a _great_ test\n\n"
+                   "no trobes")
+
+    tlg_send_selfdestruct_msg(bot, chat_id, other_info)
 
 
 ####################################################################################################

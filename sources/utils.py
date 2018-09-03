@@ -1,4 +1,8 @@
+import gettext
 import logging
+import constants as conf
+from pathlib import Path
+
 
 log = logging.getLogger(__name__)
 
@@ -22,3 +26,16 @@ def user_is_admin(bot, user_id, chat_id):
 
 def bot_is_admin(bot, chat_id):
     return bot.id in get_chat_admins_ids(bot, chat_id)
+
+
+def set_language(lang="en"):
+    localedir = "{}".format((Path(conf.ROOT_DIR) / "locale").resolve())
+    translate = gettext.translation("messages", localedir, languages=[lang])
+    translate.install()
+
+    """"
+    pybabel extract --project=bot --input-dirs=. -o messages.pot
+    pybabel init -i messages.po -l fr -d locale
+    pybabel update  -i messages.pot -l en -d locale
+    """
+

@@ -40,6 +40,7 @@ OWNER_ID = getattr(conf, "OWNER_ID", 000000000)
 # Chat ID where the Bot is going to send debug messages
 DEBUG_TO_CHAT = getattr(conf, "DEBUG_TO_CHAT", 000000000)
 # Data directory path
+ROOT_DIR = getattr(conf, "ROOT_DIR", ".")
 DATA_DIR = getattr(conf, "DATA_DIR", "./data")
 DATABASE_NAME = getattr(conf, "DATABASE_NAME", "bot.sqlite")
 # Chat JSON files name
@@ -86,7 +87,8 @@ TEXT = {
     "EN": {
         "START": "I am a Bot that fight against Spammers that join groups to publish their annoying "
         "and unwanted info. Check /help command for more information about my usage.",
-        "HELP": "Bot help:\n"
+        "HELP": "————————————————\n"
+        "Bot help:\n"
         "————————————————\n"
         "- To get working the Anti-Spam, you must add me to a group and give me "
         "Administration privileges to let me read messages and delete Spam.\n"
@@ -116,7 +118,7 @@ TEXT = {
         "- Check /commands for get a list of all avaliable commands, and a short "
         "description of all of them.\n"
         "\n"
-        "- NOTE: I don't ban users, just detect, remove and notify Spam messages [This is "
+        "- NOTE: I don't ban users, just detect, remove and notify Spam messages. This is "
         "the developer philosophy, the Bot notifies about Spam, but a human is the one who "
         "must decide whether to ban the user or not.",
         "ANTI-SPAM_BOT_ADDED_TO_GROUP": "Hello, I am a Bot that fight against Spammers that join groups to publish their "

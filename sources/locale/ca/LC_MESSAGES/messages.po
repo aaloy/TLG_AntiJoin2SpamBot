@@ -1,0 +1,31 @@
+# Catalan translations for PROJECT.
+# Copyright (C) 2018 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2018-09-03 23:12+0200\n"
+"PO-Revision-Date: 2018-09-03 23:14+0200\n"
+"Last-Translator: Antoni Aloy <antoni.aloy@gmail.com>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.6.0\n"
+"X-Generator: Poedit 2.0.6\n"
+
+#: ajsbot.py:888
+msgid "These are the admins {}"
+msgstr "Aquests són els admins {}"
+
+#: utils.py:50
+msgid "Hello world {}"
+msgstr "Hola món {}"
+
+#~ msgid "Hello world"
+#~ msgstr "Hola món!"
