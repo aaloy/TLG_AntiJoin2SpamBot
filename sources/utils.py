@@ -33,6 +33,18 @@ def set_language(lang="en"):
     translate = gettext.translation("messages", localedir, languages=[lang])
     translate.install()
 
+
+def get_msg_file(lang, command_name):
+    """Returns the message content from a file.
+    I could return a FileNotFound exception if the file does not
+    exists."""
+
+    lang = lang.lower()
+    arx = Path(conf.ROOT_DIR) / "doc" / "{}/{}.mk".format(lang, command_name)
+    with open(arx) as f:
+        bot_msg = "".join(f.readlines())
+    return bot_msg
+
     """"
     pybabel extract --project=bot --input-dirs=. -o messages.pot
     pybabel init -i messages.po -l fr -d locale

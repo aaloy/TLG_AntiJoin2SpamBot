@@ -36,8 +36,9 @@ from telegram import MessageEntity, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.error import BadRequest
 from urlextract import URLExtract
-from utils import user_is_admin, set_language
+from utils import user_is_admin, set_language, get_msg_file
 from exceptions import UserDoesNotExists
+from pathlib import Path
 
 # from pathlib import Path
 import constants as conf
@@ -515,20 +516,24 @@ def cmd_start(bot, update):
 def cmd_help(bot, update):
     """Command /help message handler"""
     chat_id = update.message.chat_id
-    chat_type = update.message.chat.type
     chat_config = storage.get_chat_config(chat_id)
-    bot_msg = TEXT[chat_config.language]["HELP"].format(
-        conf.INIT_TIME_ALLOW_URLS, conf.INIT_MIN_MSG_ALLOW_URLS, conf.T_DEL_MSG
-    )
+    lang = chat_config.language
+    try:
+        bot_msg =get_msg_file(lang, 'help')
+    except FileNotFoundError as e:
+        bot_msg = _('Help file {} not found'.format(arx))
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
 def cmd_commands(bot, update):
     """Command /commands message handler"""
     chat_id = update.message.chat_id
-    chat_type = update.message.chat.type
     chat_config = storage.get_chat_config(chat_id)
     lang = chat_config.language
+    try:
+        bot_msg = get_msg_file(lang, 'commands')
+    except FileNotFoundError as e:
+        bot_msg = _('commands help file {} not found'.format(arx))
     send_bot_msg(chat_type, bot, chat_id, TEXT[lang]["COMMANDS"], update)
 
 
@@ -1044,6 +1049,7 @@ def main():
     dp.add_handler(CommandHandler("call_when_spam", cmd_call_when_spam, pass_args=True))
     dp.add_handler(CommandHandler("users_add_bots", cmd_users_add_bots, pass_args=True))
     dp.add_handler(CommandHandler("allow_user", cmd_allow_user, pass_args=True))
+    dp.add_handler(CommandHandler("disable_user", cmd_disable_user, pass_args=True))
     dp.add_handler(CommandHandler("enable", cmd_enable))
     dp.add_handler(CommandHandler("disable", cmd_disable))
     dp.add_handler(CommandHandler("notify_all_chats", cmd_notify_all_chats))
