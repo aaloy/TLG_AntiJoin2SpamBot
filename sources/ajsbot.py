@@ -31,11 +31,11 @@ from threading import Thread
 from datetime import datetime
 from time import time, sleep
 from collections import OrderedDict
-from telegram import MessageEntity, ParseMode
+from telegram import MessageEntity
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.error import BadRequest
 from urlextract import URLExtract
-from utils import user_is_admin, set_language, get_msg_file, msg
+from utils import user_is_admin, set_language, get_msg_file, msg, text_msg
 from exceptions import UserDoesNotExists
 import constants as conf
 import logging
@@ -145,28 +145,30 @@ def anti_spam_bot_added_event(chat_id, bot, update):
         lang = "EN"
     chat_config.language = lang
     # Notify to Bot Owner that the Bot has been added to a group
-    notify_msg = _("The Bot has been added to a new group:\n\n- ID: {}\n").format(chat_id)
+    notify_msg = text_msg(
+        lang,
+        _("The Bot has been added to a new group:\n\n- ID: {}\n")).format(chat_id)
     chat_title = update.message.chat.title
     if chat_title:
         chat_config.title = chat_title
-        notify_msg = _("{}- Title: {}\n").format(notify_msg, chat_title)
+        notify_msg = text_msg(lang, _("{}- Title: {}\n")).format(notify_msg, chat_title)
     else:
-        notify_msg = _("{}- Title: Unknown\n").format(notify_msg)
+        notify_msg = text_msg(lang, _("{}- Title: Unknown\n")).format(notify_msg)
     chat_link = update.message.chat.username
     if chat_link:
         chat_link = "@{}".format(chat_link)
         chat_config.chat_link = chat_link
-        notify_msg = "{}- Link: {}\n".format(notify_msg, chat_link)
+        notify_msg = text_msg(_("{}- Link: {}\n")).format(notify_msg, chat_link)
     else:
-        notify_msg = "{}- Link: Unknown\n".format(notify_msg)
+        notify_msg = text_msg(_("{}- Link: Unknown\n")).format(notify_msg)
     admin_name = update.message.from_user.name
     admin_id = update.message.from_user.id
     notify_msg = "{}- Admin: {} [{}]".format(notify_msg, admin_name, admin_id)
     debug_print_tlg(bot, notify_msg)
     # Send bot join message
-    bot_message = _("Hello, I am a Bot that fight against Spammers that join groups to publish their\n"
+    bot_message = text_msg(lang, _("Hello, I am a Bot that fight against Spammers that join groups to publish their\n"
                     "annoying and unwanted info. To work properly, give me Admin privileges.\n"
-                    "Check /help command for more information about my usage.""")
+                    "Check /help command for more information about my usage."""))
     chat_config.save()
     bot.send_message(chat_id, bot_message)
 
@@ -865,7 +867,7 @@ def cmd_version(bot, update):
     chat_type = update.message.chat.type
     chat_config = storage.get_chat_config(chat_id)
     lang = chat_config.language
-    bot_msg = _("Actual Bot version: {}").format(conf.VERSION)
+    bot_msg = text_msg(lang, _("Actual Bot version: {}")).format(conf.VERSION)
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 

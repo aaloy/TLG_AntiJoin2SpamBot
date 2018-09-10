@@ -52,6 +52,11 @@ def get_msg_file(lang, command_name):
     """
 
 
+def text_msg(lang, text):
+    translate = set_language(lang=lang.lower())
+    return translate.gettext(text)
+
+
 def msg(lang, key):
     """Gets the message from the contants file in the language
     neeeded. Returns the key itself if not found"""
