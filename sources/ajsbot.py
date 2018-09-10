@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -30,29 +30,20 @@ from os import execl
 from threading import Thread
 from datetime import datetime
 from time import time, sleep
-from constants import TEXT
 from collections import OrderedDict
 from telegram import MessageEntity, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.error import BadRequest
 from urlextract import URLExtract
-from utils import user_is_admin, set_language, get_msg_file
+from utils import user_is_admin, set_language, get_msg_file, msg
 from exceptions import UserDoesNotExists
-from pathlib import Path
-
-# from pathlib import Path
 import constants as conf
 import logging
 import models
 
 # Globals ###
 DEBUG = getattr(conf, "DEBUG", False)
-
-
-def _(message):
-    return message
-
-del _
+_ = lambda s: s
 
 
 to_delete_messages_list = []
@@ -71,7 +62,7 @@ def signal_handler(signal, frame):
     """Termination signals (SIGINT, SIGTERM) handler for program process"""
     log.info("Closing the bot ...")
     storage.db.close()
-    sys.exit(1)
+    sys.exit(0)
 
 
 # Signals attachment ###
@@ -154,13 +145,13 @@ def anti_spam_bot_added_event(chat_id, bot, update):
         lang = "EN"
     chat_config.language = lang
     # Notify to Bot Owner that the Bot has been added to a group
-    notify_msg = "The Bot has been added to a new group:\n\n- ID: {}\n".format(chat_id)
+    notify_msg = _("The Bot has been added to a new group:\n\n- ID: {}\n").format(chat_id)
     chat_title = update.message.chat.title
     if chat_title:
         chat_config.title = chat_title
-        notify_msg = "{}- Title: {}\n".format(notify_msg, chat_title)
+        notify_msg = _("{}- Title: {}\n").format(notify_msg, chat_title)
     else:
-        notify_msg = "{}- Title: Unknown\n".format(notify_msg)
+        notify_msg = _("{}- Title: Unknown\n").format(notify_msg)
     chat_link = update.message.chat.username
     if chat_link:
         chat_link = "@{}".format(chat_link)
@@ -222,7 +213,7 @@ def try_to_add_a_bot_event(bot, message, join_user, chat_id):
             log.debug("An user has added a Bot.\n  (Chat) - ({}).".format(chat_id))
             try:
                 bot.kickChatMember(chat_id, join_user_id)
-                bot_message = TEXT[lang]["USER_CANT_ADD_BOT"].format(
+                bot_message = msg(lang, "USER_CANT_ADD_BOT").format(
                     message.from_user.name, join_user_alias
                 )
                 user.penalize(bot)
@@ -232,7 +223,7 @@ def try_to_add_a_bot_event(bot, message, join_user, chat_id):
             except Exception as e:
                 log.debug("Exception when kicking a Bot - {}".format(str(e)))
                 if str(e) == "Not enough rights to restrict/unrestrict chat member":
-                    bot_message = TEXT[lang]["USER_CANT_ADD_BOT_CANT_KICK"].format(
+                    bot_message = msg(lang, "USER_CANT_ADD_BOT_CANT_KICK").format(
                         message.from_user.name, join_user.name
                     )
 
@@ -240,7 +231,7 @@ def try_to_add_a_bot_event(bot, message, join_user, chat_id):
                 admins = chat_config.get_admins_usernames_in_string(bot)
                 if admins:
                     bot_message = "{}{}".format(
-                        bot_message, TEXT[lang]["CALLING_ADMINS"].format(admins)
+                        bot_message, msg(lang, "CALLING_ADMINS").format(admins)
                     )
             bot.send_message(chat_id, bot_message)
             to_register_user = False
@@ -308,7 +299,7 @@ def new_user(bot, update):
                         join_user_name = "{}...".format(join_user_name)[0:10]
                     try:
                         bot.delete_message(chat_id, message_id)
-                        bot_message = TEXT[lang]["USER_URL_NAME_JOIN"].format(
+                        bot_message = msg(lang, "USER_URL_NAME_JOIN").format(
                             join_user_name
                         )
                         log.debug(
@@ -322,9 +313,7 @@ def new_user(bot, update):
                             "message - {}".format(str(e))
                         )
                         if str(e) == "Message can't be deleted":
-                            bot_message = TEXT[lang][
-                                "USER_URL_NAME_JOIN_CANT_REMOVE"
-                            ].format(join_user_name)
+                            bot_message = msg(lang, "USER_URL_NAME_JOIN_CANT_REMOVE").format(join_user_name)
                             tlg_send_selfdestruct_msg(bot, chat_id, bot_message)
                     continue
                 else:
@@ -333,9 +322,7 @@ def new_user(bot, update):
                         join_user_name = "{}...".format(join_user_name)[0:10]
                         try:
                             bot.delete_message(chat_id, message_id)
-                            bot_message = TEXT[lang]["USER_LONG_NAME_JOIN"].format(
-                                join_user_name
-                            )
+                            bot_message = msg(lang, "USER_LONG_NAME_JOIN").format(join_user_name)
                             log.info(
                                 "Spammer (long name) join message successfully removed.\n"
                                 "  (Chat) - ({}).".format(chat_id)
@@ -347,9 +334,7 @@ def new_user(bot, update):
                                 "message - {}".format(str(e))
                             )
                             if str(e) == "Message can't be deleted":
-                                bot_message = TEXT[lang][
-                                    "USER_LONG_NAME_JOIN_CANT_REMOVE"
-                                ].format(join_user_name)
+                                bot_message = msg(lang, "USER_LONG_NAME_JOIN_CANT_REMOVE").format(join_user_name)
 
                         tlg_send_selfdestruct_msg(bot, chat_id, bot_message)
 
@@ -397,7 +382,7 @@ def msg_nocmd(bot, update):
                 owner_notify = False
                 message = message.text
                 notify_all_chats(bot, message)
-                bot.send_message(chat_id, TEXT[lang]["CMD_NOTIFY_ALL_OK"])
+                bot.send_message(chat_id, msg(lang, "CMD_NOTIFY_ALL_OK"))
     else:
         if message.chat.title:
             chat_config.chat_title = message.chat.title
@@ -506,35 +491,37 @@ def cmd_start(bot, update):
     lang = chat_config.language
     if chat_type == "private":
         log.info("The bot started in {} private chat".format(chat_id))
-        bot.send_message(chat_id, TEXT[lang]["START"])
+        bot.send_message(chat_id, msg(lang, "START"))
     else:
         log.info("The bot started in {} group chat".format(chat_id))
         tlg_msg_to_selfdestruct(bot, update.message)
-        tlg_send_selfdestruct_msg(bot, chat_id, TEXT[lang]["START"])
+        tlg_send_selfdestruct_msg(bot, chat_id, msg(lang, "START"))
 
 
 def cmd_help(bot, update):
     """Command /help message handler"""
+    chat_type = update.message.chat.type
     chat_id = update.message.chat_id
     chat_config = storage.get_chat_config(chat_id)
     lang = chat_config.language
     try:
-        bot_msg =get_msg_file(lang, 'help')
-    except FileNotFoundError as e:
-        bot_msg = _('Help file {} not found'.format(arx))
+        bot_msg = get_msg_file(lang, 'help')
+    except OSError:
+        bot_msg = _('Help file {} not found'.format('help'))
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
 def cmd_commands(bot, update):
     """Command /commands message handler"""
+    chat_type = update.message.chat.type
     chat_id = update.message.chat_id
     chat_config = storage.get_chat_config(chat_id)
     lang = chat_config.language
     try:
         bot_msg = get_msg_file(lang, 'commands')
-    except FileNotFoundError as e:
-        bot_msg = _('commands help file {} not found'.format(arx))
-    send_bot_msg(chat_type, bot, chat_id, TEXT[lang]["COMMANDS"], update)
+    except OSError:
+        bot_msg = _('commands help file {} not found'.format('commands'))
+    send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
 def cmd_language(bot, update, args):
@@ -556,9 +543,9 @@ def cmd_language(bot, update, args):
             lang = lang_provided if lang_provided in conf.LANGUAGES else conf.INIT_LANG
             chat_config.language = lang
             chat_config.save()
-            bot_msg = TEXT[lang]["LANG_CHANGE"]
+            bot_msg = msg(lang, "LANG_CHANGE").format(lang)
     else:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
+        bot_msg = msg(lang, "CMD_NOT_ALLOW")
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
@@ -580,7 +567,7 @@ def cmd_set_messages(bot, update, args):
             num_msgs_provided = conf.INIT_MIN_MSG_ALLOW_URLS
         chat_config.num_messages_for_allow_urls = num_msgs_provided
         chat_config.save()
-        bot_msg = TEXT[chat_config.language]["SET_MSG_CHANGED"].format(
+        bot_msg = msg(chat_config.language, "SET_MSG_CHANGED").format(
             num_msgs_provided
         )
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
@@ -606,9 +593,9 @@ def cmd_set_hours(bot, update, args):
         except ValueError:
             hours_provided = conf.INIT_TIME_ALLOW_URLS
         chat_config.time_for_allow_urls = hours_provided
-        bot_msg = TEXT[chat_config.language]["SET_HOURS_CHANGED"].format(hours_provided)
+        bot_msg = msg(chat_config.language, "SET_HOURS_CHANGED").format(hours_provided)
     else:
-        bot_msg = TEXT[chat_config.language]["CMD_NOT_ALLOW"]
+        bot_msg = msg(chat_config.language, "CMD_NOT_ALLOW")
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
@@ -617,7 +604,7 @@ def cmd_status(bot, update):
     chat_id = update.message.chat_id
     chat_type = update.message.chat.type
     chat_config = storage.get_chat_config(chat_id)
-    bot_msg = TEXT[chat_config.language]["STATUS"].format(
+    bot_msg = msg(chat_config.language, "STATUS").format(
         chat_config.num_messages_for_allow_urls,
         chat_config.time_for_allow_urls,
         chat_config.call_admins_when_spam_detected,
@@ -633,9 +620,9 @@ def cmd_call_admins(bot, update):
     chat_config = storage.get_chat_config(chat_id)
     admins = chat_config.get_admins_usernames_in_string(bot)
     if admins:
-        bot_msg = TEXT[chat_config.lang]["CALLING_ADMINS"].format(admins)
+        bot_msg = msg(chat_config.lang, "CALLING_ADMINS").format(admins)
     else:
-        bot_msg = TEXT[chat_config.lang]["CALLING_ADMINS_NO_ADMINS"]
+        bot_msg = msg(chat_config.lang, "CALLING_ADMINS_NO_ADMINS")
     bot.send_message(chat_id, bot_msg)
 
 
@@ -658,15 +645,15 @@ def cmd_call_when_spam(bot, update, args):
         if new_value in ["ENABLE", "DISABLE"]:
             chat_config.call_admins_when_spam_detected = new_value == "ENABLE"
             if chat_config.call_admins_when_spam_detected:
-                bot_msg = TEXT[lang]["CALL_WHEN_SPAM_ENABLE"]
+                bot_msg = msg(lang, "CALL_WHEN_SPAM_ENABLE")
             else:
-                bot_msg = TEXT[lang]["CALL_WHEN_SPAM_DISABLE"]
+                bot_msg = msg(lang, "CALL_WHEN_SPAM_DISABLE")
         else:
             new_value = conf.INIT_CALL_ADMINS_WHEN_SPAM
-            bot_msg = TEXT[lang]["CALL_WHEN_SPAM_NOT_ARG"]
+            bot_msg = msg(lang, "CALL_WHEN_SPAM_NOT_ARG")
         chat_config.save()
     else:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
+        bot_msg = msg(lang, "CMD_NOT_ALLOW")
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
@@ -687,15 +674,15 @@ def cmd_users_add_bots(bot, update, args):
         if new_value in ["ENABLE", "DISABLE"]:
             chat_config.call_admins_when_spam_detected = new_value == "ENABLE"
             if chat_config.call_admins_when_spam_detected:
-                bot_msg = TEXT[lang]["USERS_ADD_BOTS_ENABLE"]
+                bot_msg = msg(lang, "USERS_ADD_BOTS_ENABLE")
             else:
-                bot_msg = TEXT[lang]["USERS_ADD_BOTS_DISABLE"]
+                bot_msg = msg(lang, "USERS_ADD_BOTS_DISABLE")
         else:
             chat_config.call_admins_when_spam_detected = conf.INIT_CALL_ADMINS_WHEN_SPAM
-            bot_msg = TEXT[lang]["USERS_ADD_BOTS_NOT_ARG"]
+            bot_msg = msg(lang, "USERS_ADD_BOTS_NOT_ARG")
         chat_config.save()
     else:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
+        bot_msg = msg(lang, "CMD_NOT_ALLOW")
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
@@ -737,15 +724,15 @@ def cmd_allow_user(bot, update, args):
             if not destination_user.verified:
                 destination_user.verified = True
                 destination_user.save()
-                bot_msg = TEXT[lang]["CMD_ALLOW_USR_OK"].format(destination_user_alias)
+                bot_msg = msg(lang, "CMD_ALLOW_USR_OK").format(destination_user_alias)
             else:
-                bot_msg = TEXT[lang]["CMD_ALLOW_USR_ALREADY_ALLOWED"].format(
+                bot_msg = msg(lang, "CMD_ALLOW_USR_ALREADY_ALLOWED").format(
                     destination_user_alias
                 )
         except UserDoesNotExists:
-            bot_msg = TEXT[lang]["CMD_ALLOW_USR_NOT_FOUND"]
+            bot_msg = msg(lang, "CMD_ALLOW_USR_NOT_FOUND")
     else:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
+        bot_msg = msg(lang, "CMD_NOT_ALLOW")
 
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
@@ -775,13 +762,13 @@ def cmd_disable_user(bot, update, args):
                 chat_id, destination_user_alias
             )
             destination_user.penalize()
-            bot_msg = "User {} has ben considered a potential spammer".format(
+            bot_msg = _("User {} has ben considered a potential spammer").format(
                     destination_user_alias
                 )
         except UserDoesNotExists:
-            bot_msg = "User not found"
+            bot_msg = _("User not found")
     else:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
+        bot_msg = msg(lang, "CMD_NOT_ALLOW")
 
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
@@ -797,13 +784,13 @@ def cmd_enable(bot, update):
     lang = chat_config.language
     if chat_config.user_is_admin(bot, user_id):
         if chat_config.enabled:
-            bot_msg = TEXT[lang]["ALREADY_ENABLE"]
+            bot_msg = msg(lang, "ALREADY_ENABLE")
         else:
-            bot_msg = TEXT[lang]["ENABLE"]
+            bot_msg = msg(lang, "ENABLE")
             chat_config.enabled = True
             chat_config.save()
     else:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
+        bot_msg = msg(lang, "CMD_NOT_ALLOW")
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
@@ -818,13 +805,13 @@ def cmd_disable(bot, update):
 
     if chat_config.user_is_admin(bot, user_id):
         if not chat_config.enabled:
-            bot_msg = TEXT[lang]["ALREADY_DISABLE"]
+            bot_msg = msg(lang, "ALREADY_DISABLE")
         else:
-            bot_msg = TEXT[lang]["DISABLE"]
+            bot_msg = msg(lang, "DISABLE")
             chat_config.enabled = False
             chat_config.save()
     else:
-        bot_msg = TEXT[lang]["CMD_NOT_ALLOW"]
+        bot_msg = msg(lang, "CMD_NOT_ALLOW")
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
@@ -840,14 +827,14 @@ def cmd_notify_all_chats(bot, update):
         if user_id == conf.OWNER_ID:
             if owner_notify is False:
                 owner_notify = True
-                bot.send_message(chat_id, TEXT[lang]["CMD_NOTIFY_ALL"])
+                bot.send_message(chat_id, msg(lang, "CMD_NOTIFY_ALL"))
             else:
-                bot.send_message(chat_id, TEXT[lang]["CMD_NOTIFYING"])
+                bot.send_message(chat_id, msg(lang, "CMD_NOTIFYING"))
         else:
-            bot.send_message(chat_id, TEXT[lang]["CMD_JUST_ALLOW_OWNER"])
+            bot.send_message(chat_id, msg(lang, "CMD_JUST_ALLOW_OWNER"))
     else:
         tlg_msg_to_selfdestruct(bot, update.message)
-        tlg_send_selfdestruct_msg(bot, chat_id, TEXT[lang]["CMD_JUST_ALLOW_IN_PRIVATE"])
+        tlg_send_selfdestruct_msg(bot, chat_id, msg(lang, "CMD_JUST_ALLOW_IN_PRIVATE"))
 
 
 def cmd_notify_discard(bot, update):
@@ -862,14 +849,14 @@ def cmd_notify_discard(bot, update):
         if user_id == conf.OWNER_ID:
             if owner_notify is True:
                 owner_notify = False
-                bot.send_message(chat_id, TEXT[lang]["CMD_NOTIFY_DISCARD"])
+                bot.send_message(chat_id, msg(lang, "CMD_NOTIFY_DISCARD"))
             else:
-                bot.send_message(chat_id, TEXT[lang]["CMD_NOTIFY_CANT_DISCARD"])
+                bot.send_message(chat_id, msg(lang, "CMD_NOTIFY_CANT_DISCARD"))
         else:
-            bot.send_message(chat_id, TEXT[lang]["CMD_JUST_ALLOW_OWNER"])
+            bot.send_message(chat_id, msg(lang, "CMD_JUST_ALLOW_OWNER"))
     else:
         tlg_msg_to_selfdestruct(bot, update.message)
-        tlg_send_selfdestruct_msg(bot, chat_id, TEXT[lang]["CMD_JUST_ALLOW_IN_PRIVATE"])
+        tlg_send_selfdestruct_msg(bot, chat_id, msg(lang, "CMD_JUST_ALLOW_IN_PRIVATE"))
 
 
 def cmd_version(bot, update):
@@ -878,7 +865,7 @@ def cmd_version(bot, update):
     chat_type = update.message.chat.type
     chat_config = storage.get_chat_config(chat_id)
     lang = chat_config.language
-    bot_msg = TEXT[lang]["VERSION"].format(conf.VERSION)
+    bot_msg = _("Actual Bot version: {}").format(conf.VERSION)
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 
@@ -888,9 +875,10 @@ def cmd_about(bot, update):
     chat_type = update.message.chat.type
     chat_config = storage.get_chat_config(chat_id)
     lang = chat_config.language
-    bot_msg = TEXT[lang]["ABOUT_MSG"].format(
-        conf.DEVELOPER, conf.REPOSITORY, conf.DEV_PAYPAL, conf.DEV_BTC
-    )
+    try:
+        bot_msg = get_msg_file(lang, 'about')
+    except OSError as e:
+        bot_msg = _('Help file {} not found'.format('about'))
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 
 

@@ -3,7 +3,6 @@ import logging
 import constants as conf
 from pathlib import Path
 
-
 log = logging.getLogger(__name__)
 
 
@@ -32,6 +31,7 @@ def set_language(lang="en"):
     localedir = "{}".format((Path(conf.ROOT_DIR) / "locale").resolve())
     translate = gettext.translation("messages", localedir, languages=[lang])
     translate.install()
+    return translate
 
 
 def get_msg_file(lang, command_name):
@@ -51,3 +51,11 @@ def get_msg_file(lang, command_name):
     pybabel update  -i messages.pot -l en -d locale
     """
 
+
+def msg(lang, key):
+    """Gets the message from the contants file in the language
+    neeeded. Returns the key itself if not found"""
+
+    translate = set_language(lang=lang.lower())
+    s = conf.MSG.get(key, key)
+    return translate.gettext(s)
