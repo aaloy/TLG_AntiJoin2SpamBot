@@ -284,6 +284,10 @@ class Storage:
     def register_new_user(
         self, chat_id, user_id, user_name, first_name, last_name, join_date, allow_user
     ):
+        if not first_name:
+            first_name = user_name
+        if not last_name:
+            last_name = "-"
         chat, created = Chat.get_or_create(chat_id=chat_id)
         user, created = User.get_or_create(
             chat=chat,
