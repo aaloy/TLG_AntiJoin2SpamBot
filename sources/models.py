@@ -254,6 +254,8 @@ class Storage:
 
     def get_user(self, user_id, chat_id):
         chat, created = Chat.get_or_create(chat_id=chat_id)
+        if created:
+            log.info("Chat {} created on get_user".format(chat_id))
         try:
             user = User.get(User.chat == chat_id, User.user_id == user_id)
             return user
@@ -268,6 +270,8 @@ class Storage:
         user is not in the database, or the user object
         if she's found"""
         chat, created = Chat.get_or_create(chat_id=chat_id)
+        if created:
+            log.info("Chat {} created on get_user_from_alias".format(chat_id))
         try:
             user = User.get(User.chat == chat, User.user_name == user_alias)
             return user
@@ -278,6 +282,9 @@ class Storage:
         """Check if chat config exits, if not creates a
         new configuration with the defaults"""
         chat, created = Chat.get_or_create(chat_id=chat_id)
+        if created:
+            log.info("Chat {} created on get_chat_config".format(chat_id))
+
         config, created = Config.get_or_create(chat=chat)
         return config
 
@@ -289,6 +296,9 @@ class Storage:
         if not last_name:
             last_name = "-"
         chat, created = Chat.get_or_create(chat_id=chat_id)
+        if created:
+            log.info("Chat {} created on register_new_user".format(chat_id))
+
         user, created = User.get_or_create(
             chat=chat,
             user_id=user_id,

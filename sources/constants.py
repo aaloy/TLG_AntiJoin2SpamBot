@@ -44,11 +44,6 @@ ROOT_DIR = getattr(conf, "ROOT_DIR", ".")
 DATA_DIR = getattr(conf, "DATA_DIR", "./data")
 DATABASE_NAME = getattr(conf, "DATABASE_NAME", "bot.sqlite")
 # Chat JSON files name
-F_USERS = getattr(conf, "F_USERS", "users.json")
-# Messages JSON files name
-F_MSG = getattr(conf, "F_MSG", "msgs.json")
-# Chat configurations JSON files name
-F_CONF = getattr(conf, "F_CONF", "configs.json")
 # Initial chat title at Bot start
 INIT_TITLE = getattr(conf, "INIT_TITLE", "Unknown Chat")
 # Initial chat link at Bot start
@@ -56,7 +51,7 @@ INIT_LINK = getattr(conf, "INIT_LINK", "Unknown")
 # Initial language at Bot start
 INIT_LANG = getattr(conf, "INIT_LANG", "EN")
 # Allowed languages
-LANGUAGES = ["EN", "ES"]
+LANGUAGES = ["EN", "ES", "CA"]
 # Initial enable/disable status at Bot start
 INIT_ENABLE = getattr(conf, "INIT_ENABLE", True)
 # Initial hours until allow a user to publish URLs in messages
@@ -71,6 +66,10 @@ INIT_ALLOW_USERS_ADD_BOTS = getattr(conf, "INIT_ALLOW_USERS_ADD_BOTS", False)
 T_DEL_MSG = getattr(conf, "T_DEL_MSG", 3)
 # Save messages for each chat
 SAVE_CHAT_MESSAGES = getattr(conf, "SAVE_CHAT_MESSAGES", True)
+# Config parameters
+MAX_USERNAME_LENGTH = getattr(conf, "MAX_USERNAME_LENGTH", 30)
+MAX_USERNAME_ALIAS = getattr(conf, "MAX_USERNAME_ALIAS", 50)
+
 DEVELOPER = "@JoseTLG & @aaloy"  # Bot developer
 REPOSITORY = (
     "https://https://github.com/J-Rios/TLG_AntiJoin2SpamBot \n "
@@ -78,8 +77,6 @@ REPOSITORY = (
 DEV_PAYPAL = "https://www.paypal.me/josrios"  # Developer Paypal address
 DEV_BTC = "3N9wf3FunR6YNXonquBeWammaBZVzTXTyR"  # Developer Bitcoin address
 VERSION = "1.8.0"  # Bot version
-MAX_USERNAME_LENGTH = getattr(conf, "MAX_USERNAME_LENGTH", 30)
-MAX_USERNAME_ALIAS = getattr(conf, "MAX_USERNAME_ALIAS", 50)
 
 
 _ = lambda s: s

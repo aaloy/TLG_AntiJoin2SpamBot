@@ -120,7 +120,7 @@ def left_user(bot, update):
     message_id = update.message.message_id
     user = update.message.left_chat_member
     left_user_name = "{} {}".format(user.first_name, user.last_name)
-    log.info("{} left the group".format(left_user_name))
+    log.info("{} left the group {}".format(left_user_name, chat_id))
 
     try:
         extractor = URLExtract()
@@ -355,7 +355,7 @@ def new_user(bot, update):
                     join_date=join_date,
                     allow_user=False
                 )
-            log.info('{} added to the group'.format(join_user_alias))
+            log.info('{} added to the group {}'.format(join_user_alias, chat_id))
 
 
 def msg_nocmd(bot, update):
@@ -1061,7 +1061,7 @@ def main():
         CommandHandler("r", restart, filters=Filters.user(username=conf.MANAGERS_LIST))
     )
     # Launch the Bot ignoring pending messages (clean=True)
-    updater.start_polling(clean=True)
+    updater.start_polling(clean=True, poll_interval=5, timeout=10)
     # Handle self-messages delete
     selfdestruct_messages(updater.bot)
     # Allow bot stop

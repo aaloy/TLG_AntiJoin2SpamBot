@@ -8,6 +8,7 @@ python-telegram-bot = "*"
 filelock = "*"
 urlextract = "*"
 peewee = "*"
+pip = "*"
 
 [dev-packages]
 pylint = "*"
