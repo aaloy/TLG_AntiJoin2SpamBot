@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2018-09-11 00:23+0200\n"
-"PO-Revision-Date: 2018-09-12 21:12+0200\n"
+"PO-Revision-Date: 2018-09-17 23:08+0200\n"
 "Last-Translator: Antoni Aloy <antoni.aloy@gmail.com>\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
@@ -282,12 +282,16 @@ msgid ""
 "New users need to send {} messages to get allowed to publish URLs in "
 "messages."
 msgstr ""
+"Nombre de missatges canviat correctament.\n"
+"\n"
+"Els nous usuaris necessiten enviar {} missatges abans de poder publicar "
+"URLs als seus missatges."
 
 #: constants.py:134
 msgid ""
 "Invalid number of messages provided. The number of messages needs to be "
 "positive."
-msgstr ""
+msgstr "Nombre de missatges incorrecte. El valor ha de ser positiu."
 
 #: constants.py:137
 msgid ""
@@ -299,6 +303,15 @@ msgid ""
 "/set_messages 5\n"
 "/set_messages 20"
 msgstr ""
+"Valor de nombre de missatges incorrecte. Necessites especificar quants "
+"missatges vols que els nous usuaris hagin d'esperar abans que se'ls "
+"permeti publicar URLs als seus missatges.\n"
+"\n"
+"Per exemple:\n"
+"/set_messages 5 \n"
+"/set_messages 20\n"
+"\n"
+"per esperar 5 o 20 missatges respectivament."
 
 #: constants.py:140
 msgid ""
@@ -310,18 +323,27 @@ msgid ""
 "/set_messages 5\n"
 "/set_messages 20"
 msgstr ""
+"Valor de nombre de missatges no especificat. Necessites especificar quants "
+"missatges vols que els nous usuaris hagin d'esperar abans que se'ls "
+"permeti publicar URLs als seus missatges.\n"
+"\n"
+"Per exemple:\n"
+"/set_messages 5 \n"
+"/set_messages 20\n"
+"\n"
+"per esperar 5 o 20 missatges respectivament."
 
 #: constants.py:143
 msgid "User {} granted to publish URLs in messages."
-msgstr ""
+msgstr "S'ha permés a l'usuari {} publicar URLs als seus missatges."
 
 #: constants.py:144
 msgid "User {} is already allowed to publish URLs in messages."
-msgstr ""
+msgstr "L'usuari {} ja té permés publicar URLs als seus missatges."
 
 #: constants.py:147
 msgid "User not found in my data base."
-msgstr ""
+msgstr "No he trobat l'usuari dins la meva base de dades."
 
 #: constants.py:148
 msgid ""
@@ -332,38 +354,48 @@ msgid ""
 "/allow_user @mr_doe\n"
 "/allow_user Jhon Doe"
 msgstr ""
+"No s'ha indicat usuari. Necessites indicar el nom d'usuari o alies al qual "
+"vols que doni permisos per publicar URLs als missatges.\n"
+"Per exemple:\n"
+"/allow_user @mr_doe\n"
+"/allow_user John Doe"
 
 #: constants.py:151
 msgid "Anti-Spam enabled. Stop it with /disable command."
-msgstr ""
+msgstr "Bot anit-spam habilitat. Atuar'l amb la comanda /disable"
 
 #: constants.py:152
 msgid "Anti-Spam disabled. Start it with /enable command."
-msgstr ""
+msgstr "Bot anit-spam deshabilitat. Habilita'l amb la comanda /enable ."
 
 #: constants.py:153
 msgid "I am already enabled."
-msgstr ""
+msgstr "Ja estic habilitat."
 
 #: constants.py:154
 msgid "I am already disabled."
-msgstr ""
+msgstr "Ja estic deshabilitat."
 
 #: constants.py:155
 msgid ""
 "Anti-Spam message:\n"
 "————————————————\n"
 msgstr ""
+"Missatge anti-spam:\n"
+"————————————————\n"
 
 #: constants.py:156
 msgid ""
 "Spam message detected, but I don't have permission for remove it. Please, "
 "give me administration privileges for delete messages ;)"
 msgstr ""
+"S'ha detectat un missatge com a spam, però no tenc permisos per borrar-lo. "
+"Si us plau, dona'm permisos d'administrador per poder borrar missatges ;)"
 
 #: constants.py:159
 msgid "Message from user {} removed for the sake of a free of Spam Telegram."
 msgstr ""
+"Missatges de l'usuari {} eliminat a fi de mantenir Telegram lliure d'Spam."
 
 #: constants.py:162
 msgid ""
@@ -372,6 +404,10 @@ msgid ""
 "New members need to write <b>{} messages</b> and wait <b>{} hours</b> to "
 "be allowed to publish URLs in their messages."
 msgstr ""
+"\n"
+"\n"
+"Els nous membres necessiten escriure <b>{} missatges</b> i esperar <b>{} "
+"hores </b> per poder publicar URLs als seus missatges."
 
 #: constants.py:165
 msgid ""
@@ -381,26 +417,31 @@ msgid ""
 "\n"
 "{}"
 msgstr ""
+"\n"
+"\n"
+"Cridant als Admins:\n"
+"\n"
+"{}"
 
 #: constants.py:166
 msgid "There is not Admins in this chat."
-msgstr ""
+msgstr "No hi ha admins a aquest chat"
 
 #: constants.py:167
 msgid "Automatic call Admins when Spam is detected enabled."
-msgstr ""
+msgstr "Cridada automàtica als Admins quan se detecta Spam habilitada."
 
 #: constants.py:168
 msgid "Automatic call Admins when Spam is detected disabled."
-msgstr ""
+msgstr "Cridada automàtica als Admins quan se detecta Spam deshabilitada."
 
 #: constants.py:171
 msgid "Call Admins when Spam is detected is already enabled."
-msgstr ""
+msgstr "Cridada automàtica als Admins quan se detecta Spam ja habilitada."
 
 #: constants.py:174
 msgid "Call Admins when Spam is detected is already disabled."
-msgstr ""
+msgstr "Cridada automàtica als Admins quan se detecta Spam ja deshabilitada."
 
 #: constants.py:177
 msgid ""
@@ -410,22 +451,27 @@ msgid ""
 "/call_when_spam enable\n"
 "/ call_when_spam disable"
 msgstr ""
+"La comanda necessita de la clau enable/disable.\n"
+"\n"
+"Exemple:\n"
+"/call_when_spam enable\n"
+"/call_when_spam disable"
 
 #: constants.py:180
 msgid "Allow users to add Bots enabled."
-msgstr ""
+msgstr "Permetre als usuaris afegir bots habilitat."
 
 #: constants.py:181
 msgid "Allow users to add Bots disabled."
-msgstr ""
+msgstr "Permetre als usuaris afegir bots deshabilitat."
 
 #: constants.py:182
 msgid "Allow users to add Bots is already enabled."
-msgstr ""
+msgstr "Permetre als usuaris afegir bots ja habilitat."
 
 #: constants.py:183
 msgid "Allow users to add Bots is already disabled."
-msgstr ""
+msgstr "Permetre als usuaris afegir bots ja deshabilitat."
 
 #: constants.py:184
 msgid ""
@@ -435,6 +481,11 @@ msgid ""
 "/users_add_bots enable\n"
 "/users_add_bots disable"
 msgstr ""
+"La comanda necessita de la clau enable/disable.\n"
+"\n"
+"Exemple:\n"
+"/users_add_bots enable\n"
+"/users_add_bots disable"
 
 #: constants.py:187
 msgid ""
@@ -442,6 +493,10 @@ msgid ""
 "\n"
 "User {} try to add the Bot {}. The Bot has been kicked and banned."
 msgstr ""
+"Aquest grup no permet que els usuaris convidin o afegeixin Bots.\n"
+"\n"
+"L'usuari {} ha intentat afegir el bot {}. El bot ha estat rebutjat i "
+"foragitat."
 
 #: constants.py:190
 msgid ""
@@ -451,10 +506,15 @@ msgid ""
 "permission to do it. Please, give me administration privileges for ban "
 "members ;)"
 msgstr ""
+"Aquest grup no permet que els usuaris convidin o afegeixin Bots.\n"
+"\n"
+"L'usuari {} ha intentat afegir el bot {}. S'ha intentat foragitar el bot, "
+"però no ha estat possible. Si us plau, dona'm permisos d'administrador per "
+"poder foragitar usuaris ;)"
 
 #: constants.py:193
 msgid "Can't use this command in the current chat."
-msgstr ""
+msgstr "No puc usar aquesta comanda en aquest chat."
 
 #: constants.py:194
 msgid ""
@@ -464,6 +524,11 @@ msgid ""
 "\n"
 "'{} has joined the chat.'"
 msgstr ""
+"Avís anti-spam:\n"
+"————————————————\n"
+" Un usuari amb el nom massa llarg s'ha afegit al chat.\n"
+"\n"
+"'{} s'ha afegit al chat.'"
 
 #: constants.py:197
 msgid ""
@@ -475,6 +540,13 @@ msgid ""
 "\n"
 "{} has joined the chat."
 msgstr ""
+"Avís anti-spam:\n"
+"————————————————\n"
+" Un usuari amb el nom massa llarg s'ha afegit al chat. No tenc permisos "
+"per eliminar el missatge. Si us plau, dona'm permisos d'administrador per "
+"poder esborrar missatges ;)\n"
+"\n"
+"'{} s'ha afegit al chat.'"
 
 #: constants.py:200
 msgid ""
@@ -484,6 +556,11 @@ msgid ""
 "\n"
 "{} has joined the chat."
 msgstr ""
+"Avís anti-spam:\n"
+"————————————————\n"
+"Un usuari amb una URL al nom s'ha afegit al chat.\n"
+"\n"
+"'{} s'ha afegit al chat.'"
 
 #: constants.py:203
 msgid ""
@@ -495,18 +572,29 @@ msgid ""
 "\n"
 "{} has joined the chat."
 msgstr ""
+"Avís anti-spam:\n"
+"————————————————\n"
+"Un usuari amb el URLs al nom s'ha afegit al chat. No tenc permisos per "
+"eliminar el missatge. Si us plau, dona'm permisos d'administrador per "
+"poder esborrar missatges ;)\n"
+"\n"
+"'{} s'ha afegit al chat.'"
 
 #: constants.py:206
 msgid ""
 "\n"
 "————————————————\n"
 msgstr ""
+"\n"
+"————————————————\n"
 
 #: constants.py:207
 msgid ""
 "\n"
 "————————————————————————————————————————————————\n"
 msgstr ""
+"\n"
+"————————————————————————————————————————————————\n"
 
 #~ msgid "Hello world"
 #~ msgstr "Hola món!"
