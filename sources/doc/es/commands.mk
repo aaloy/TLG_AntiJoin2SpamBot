@@ -35,4 +35,4 @@ Lista de comandos
 
 /version - Consulta la versión del Bot.
 
-'/about - Muestra la información acerca de... del Bot.
+/about - Muestra la información acerca de... del Bot.

@@ -195,7 +195,7 @@ def try_to_add_a_bot_event(bot, message, join_user, chat_id):
     lang = chat_config.language
 
     try:
-        user = storage.get_user(msg_from_user_id, chat_id)
+        user = storage.get_user(user_id=msg_from_user_id, chat_id=chat_id)
     except UserDoesNotExists:
         storage.register_new_user(
             chat_id=chat_id,
@@ -401,7 +401,7 @@ def msg_nocmd(bot, update):
         # If user not yet register, it means it was there before the bot,
         # assume that is legit, add to users file, else, get his number of published msgs
         try:
-            user = storage.get_user(chat_id, user_id)
+            user = storage.get_user(user_id=user_id, chat_id=chat_id)
             user.update_message_counter(chat_id=chat_id, delta=1)
             if text:
                 if user.is_spammer(chat_id, msg_date, text):
@@ -446,7 +446,7 @@ def link_control(bot, update):
         return
 
     try:
-        user = storage.get_user(user_id, chat_id)
+        user = storage.get_user(user_id=user_id, chat_id=chat_id)
     except UserDoesNotExists:
         user_name = update.message.from_user.name
         user = storage.register_new_user(
@@ -713,7 +713,7 @@ def cmd_allow_user(bot, update, args):
     user_id = update.message.from_user.id
     chat_config = storage.get_chat_config(chat_id)
     # command user
-    command_user = storage.get_user(user_id, chat_id)
+    command_user = storage.get_user(user_id=user_id, chat_id=chat_id)
     # destination_user
     destination_user_alias = _get_user_alias(args)
     lang = chat_config.language
@@ -753,7 +753,7 @@ def cmd_disable_user(bot, update, args):
     user_id = update.message.from_user.id
     chat_config = storage.get_chat_config(chat_id)
     # command user
-    command_user = storage.get_user(user_id, chat_id)
+    command_user = storage.get_user(user_id=user_id, chat_id=chat_id)
     # destination_user
     destination_user_alias = _get_user_alias(args)
     lang = chat_config.language
