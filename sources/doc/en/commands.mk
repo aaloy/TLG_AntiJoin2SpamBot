@@ -11,6 +11,7 @@ List of commands
 /language - Allow to change the language of the bot messages. Actual available languages:
 	* en (english)
 	* es (spanish).
+	* ca (catalan)
 
 /status - Check actual configured values of all properties.
 

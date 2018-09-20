@@ -3,7 +3,7 @@
 
 """
 Script:
-    anti_join2spam_bot.py
+    ajsbot.py
 Description:
     Telegram Bot that figths against the spammer users that join groups to publish
     their annoying and unwanted info.
@@ -326,7 +326,7 @@ def new_user(bot, update):
                             bot.delete_message(chat_id, message_id)
                             bot_message = msg(lang, "USER_LONG_NAME_JOIN").format(join_user_name)
                             log.info(
-                                "Spammer (long name) join message successfully removed.\n"
+                                "Spammer (long name) join message successfully removed."
                                 "  (Chat) - ({}).".format(chat_id)
                             )
 
@@ -413,7 +413,7 @@ def msg_nocmd(bot, update):
                     # Do not count this message as legit
                     user.update_message_counter(delta=-1)
                     # Save message for future reference
-                    storage.save_message(chat_id, user_id, text)
+                    storage.save_message(chat_id, user_id, message.message_id, text)
                     bot.delete_message(chat_id, message.message_id)
                 else:
                     user.try_to_verify(chat_id, msg_date)
@@ -437,10 +437,11 @@ def link_control(bot, update):
     in a message group. If the user is not allowed to post link,
     for any restriction applied, the whole message is deleted.
     """
-    chat_id = update.message.chat.id
+    message = update.message
+    chat_id = message.chat.id
     chat_config = storage.get_chat_config(chat_id)
-    msg_id = update.message.message_id
-    user_id = update.message.from_user.id
+    msg_id = message.message_id
+    user_id = message.from_user.id
 
     if not chat_config.enabled:
         return
@@ -465,6 +466,7 @@ def link_control(bot, update):
     if not user.can_post_links(bot):
         log.info("User {} can't post links in {}".format(user_id, chat_id))
         try:
+            storage.save_message(chat_id, user_id, msg_id, message.text)
             result = bot.delete_message(chat_id, msg_id)
         except BadRequest:
             result = False
@@ -1061,7 +1063,7 @@ def main():
         CommandHandler("r", restart, filters=Filters.user(username=conf.MANAGERS_LIST))
     )
     # Launch the Bot ignoring pending messages (clean=True)
-    updater.start_polling(clean=True, poll_interval=5, timeout=10)
+    updater.start_polling(clean=True, poll_interval=5, timeout=20)
     # Handle self-messages delete
     selfdestruct_messages(updater.bot)
     # Allow bot stop

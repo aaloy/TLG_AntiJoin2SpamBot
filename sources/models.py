@@ -104,7 +104,7 @@ class User(BaseModel):
 
         self.verified = False
         self.join_date = datetime.now()
-        self.num_message = 0
+        self.num_messages = 0
         self.save()
         log.info("User: {} has been penalized".format(self.user_name))
 
@@ -200,6 +200,8 @@ class User(BaseModel):
 
 
 class Message(BaseModel):
+    """This table is just for log purposes"""
+
     chat = ForeignKeyField(Chat, backref="messages")
     msg_id = IntegerField()
     user_id = BigIntegerField()
@@ -261,6 +263,22 @@ class Storage:
             return user
         except User.DoesNotExist:
             raise UserDoesNotExists
+
+    def save_message(self, chat_id, user_id, msg_id, text):
+        try:
+            user = User.get(User.chat == chat_id, User.user_id == user_id)
+            user_name = user.user_alias
+        except User.DoesNotExist:
+            user_name = "Not in database"
+        if conf.SAVE_CHAT_MESSAGES:
+            msg = Message(
+                user_id=user_id,
+                chat_id=chat_id,
+                msg_id=msg_id,
+                user_name=user_name,
+                text=text,
+            )
+            msg.save()
 
     def get_chats(self):
         return Chat.select()
