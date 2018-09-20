@@ -345,6 +345,8 @@ def new_user(bot, update):
                     join_user_alias = "{}...".format(join_user_alias)[
                         0:conf.MAX_USERNAME_ALIAS - 3
                     ]
+            if storage.last_addition(chat_id) > conf.VERBOSE_LIMIT:
+                bot.send_message(chat_id, msg(lang, "START"))
 
             storage.register_new_user(
                     chat_id=chat_id,
@@ -355,6 +357,7 @@ def new_user(bot, update):
                     join_date=join_date,
                     allow_user=False
                 )
+
             log.info('{} added to the group {}'.format(join_user_alias, chat_id))
 
 
@@ -881,7 +884,7 @@ def cmd_about(bot, update):
     lang = chat_config.language
     try:
         bot_msg = get_msg_file(lang, 'about')
-    except OSError as e:
+    except OSError:
         bot_msg = _('Help file {} not found'.format('about'))
     send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
 

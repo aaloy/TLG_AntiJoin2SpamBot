@@ -264,6 +264,22 @@ class Storage:
         except User.DoesNotExist:
             raise UserDoesNotExists
 
+    def last_addition(self, chat_id):
+        """Return the the number of minutes of the last user addition. If there is no user
+        assumes now"""
+        try:
+            u = (
+                User.select()
+                .join(Chat)
+                .where(Chat.chat_id == chat_id)
+                .order_by(User.created_date.desc())
+                .limit(1)[0]
+            )
+            dt = datetime.datetime.now() - u.created_date
+            return dt.total_seconds() / 60
+        except IndexError:
+            return 0
+
     def save_message(self, chat_id, user_id, msg_id, text):
         try:
             user = User.get(User.chat == chat_id, User.user_id == user_id)

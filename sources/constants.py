@@ -69,7 +69,8 @@ SAVE_CHAT_MESSAGES = getattr(conf, "SAVE_CHAT_MESSAGES", True)
 # Config parameters
 MAX_USERNAME_LENGTH = getattr(conf, "MAX_USERNAME_LENGTH", 30)
 MAX_USERNAME_ALIAS = getattr(conf, "MAX_USERNAME_ALIAS", 50)
-
+# minimum number of minutes before the bot repeats the welcome message
+VERBOSE_LIMIT = getattr(conf, "VERBOSE_LIMIT", 30)
 DEVELOPER = "@JoseTLG & @aaloy"  # Bot developer
 REPOSITORY = (
     "https://https://github.com/J-Rios/TLG_AntiJoin2SpamBot \n "
