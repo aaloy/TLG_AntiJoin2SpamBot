@@ -346,7 +346,10 @@ def new_user(bot, update):
                         0:conf.MAX_USERNAME_ALIAS - 3
                     ]
             if storage.last_addition(chat_id) > conf.VERBOSE_LIMIT:
-                bot.send_message(chat_id, msg(lang, "START"))
+                bot.send_message(chat_id, msg(lang, "WELCOME_MSG").format(
+                    join_user_alias, chat_config.num_messages_for_allow_urls, chat_config.time_for_allow_urls,
+                    chat_config.call_admins_when_spam_detected, chat_config.allow_users_to_add_bots,
+                    chat_config.enabled))
 
             storage.register_new_user(
                     chat_id=chat_id,

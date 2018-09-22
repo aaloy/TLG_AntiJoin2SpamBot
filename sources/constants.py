@@ -90,6 +90,9 @@ MSG = {
     "ANTI-SPAM_BOT_ADDED_TO_GROUP": _(
         "Hello, I am a Bot that fight against Spammers that join groups to publish their annoying and unwanted info. To work properly, give me Admin privileges.Check /help command for more information about my usage."
     ),
+    "WELCOME_MSG": _(
+        "Hello {}! Welcome! Please read the group norms in pinned message. This group as a bot (me) to fight against spammers. Use the /status command to know my parameters and /help to know more about me. \n Actual configuration:\n————————————————\nNumber of messages to allow URLs:\n{}\n\nHours until allow URLs:\n {}\n\nAdmins call when Spam detected:\n{}\n\nAllow users to add Bots:\n{}\n\nAnti-Spam:\n {}\n"
+    ),
     "CMD_NOT_ALLOW": _("Just an Admin can use this command"),
     "CMD_JUST_ALLOW_IN_PRIVATE": _("This command just can be use in a private chat."),
     "CMD_JUST_ALLOW_OWNER": _("This command just can be use by the Owner of the Bot."),
