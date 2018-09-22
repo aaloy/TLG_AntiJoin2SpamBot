@@ -25,7 +25,7 @@ now sensible default values.
 ### TODO
 
 * More cleaning and refactoring. Check for unused functions and duplicated code.
-* Move to gettext files for message translation
+* ~Move to gettext files for message translation~
 * Split bot code in modules:
 	* commands
 	* messages
