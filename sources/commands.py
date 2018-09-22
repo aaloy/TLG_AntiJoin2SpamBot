@@ -422,6 +422,6 @@ def cmd_test(bot, update):
         chat_config.get_admins_usernames_in_string(bot)
     )
     tlg_send_selfdestruct_msg(bot, chat_id, info)
-    other_info = _("this *is* \n" "a _great_ test\n\n" "no trobes")
+    other_info = _("import this")
 
     tlg_send_selfdestruct_msg(bot, chat_id, other_info)
