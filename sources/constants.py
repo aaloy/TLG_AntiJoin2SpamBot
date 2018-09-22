@@ -64,6 +64,8 @@ INIT_CALL_ADMINS_WHEN_SPAM = getattr(conf, "INIT_CALL_ADMINS_WHEN_SPAM", False)
 INIT_ALLOW_USERS_ADD_BOTS = getattr(conf, "INIT_ALLOW_USERS_ADD_BOTS", False)
 # Time (in mins) to remove self-destruct sent messages from the Bot
 T_DEL_MSG = getattr(conf, "T_DEL_MSG", 3)
+# number of seconds before checking for deletion
+DESTROY_FREQ = getattr(conf, "DESTROY_FREQ", 10)
 # Save messages for each chat
 SAVE_CHAT_MESSAGES = getattr(conf, "SAVE_CHAT_MESSAGES", True)
 # Config parameters

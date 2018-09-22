@@ -210,6 +210,23 @@ class Message(BaseModel):
     date = DateTimeField()
 
 
+class ToDestroy(BaseModel):
+    """Maintains the list of messages to destroy"""
+
+    chat = ForeignKeyField(Chat, backref="to_destroy_messages")
+    msg_id = IntegerField()
+    destroy_time = DateTimeField()
+
+    class Meta:
+        primary_key = CompositeKey("chat", "msg_id")
+
+    @staticmethod
+    def to_delete_messages_list():
+        return ToDestroy.select().where(
+            ToDestroy.destroy_time <= datetime.datetime.now()
+        )
+
+
 class Config(BaseModel):
     chat = ForeignKeyField(Chat, backref="users")
     title = CharField(default="")
@@ -250,7 +267,7 @@ class Config(BaseModel):
 
 class Storage:
     def __init__(self):
-        db.create_tables([Chat, Config, User, Message])
+        db.create_tables([Chat, Config, User, Message, ToDestroy])
         db.connect(reuse_if_open=True)
         self.db = db
 
@@ -263,6 +280,37 @@ class Storage:
             return user
         except User.DoesNotExist:
             raise UserDoesNotExists
+
+    def add_message_to_destroy(self, chat_id, msg_id, minutes=0):
+        if not minutes:
+            minutes = conf.T_DEL_MSG
+        destroy_time = datetime.datetime.now() + datetime.timedelta(minutes=minutes)
+        chat, created = Chat.get_or_create(chat_id=chat_id)
+        if created:
+            log.info("Chat {} created on get_user".format(chat_id))
+        td, created = ToDestroy.get_or_create(
+            chat=chat, msg_id=msg_id, defaults={"destroy_time": destroy_time}
+        )
+        if created:
+            log.info(
+                "Sent message has been set to selfdestruct.\n  (Chat, Msg, When) - "
+                "({}, {}, {}).".format(td.chat_id, td.msg_id, td.destroy_time)
+            )
+
+    def delete_messages_list(self, bot):
+        messages = ToDestroy.select().where(
+            ToDestroy.destroy_time <= datetime.datetime.now()
+        )
+        log.debug("{} messages to destroy".format(len(messages)))
+        for sent_msg in messages:
+            # If actual time is equal or more than the expected sent msg delete time
+            try:
+                if bot.delete_message(sent_msg.chat.chat_id, sent_msg.msg_id):
+                    log.debug("Message successfully removed.")
+            except Exception as e:
+                log.error("{} Fail - Can't delete message.".format(e))
+            finally:
+                sent_msg.delete_instance()
 
     def last_addition(self, chat_id):
         """Return the the number of minutes of the last user addition. If there is no user
@@ -283,7 +331,7 @@ class Storage:
     def save_message(self, chat_id, user_id, msg_id, text):
         try:
             user = User.get(User.chat == chat_id, User.user_id == user_id)
-            user_name = user.user_alias
+            user_name = user.user_name
         except User.DoesNotExist:
             user_name = "Not in database"
         if conf.SAVE_CHAT_MESSAGES:
@@ -293,6 +341,7 @@ class Storage:
                 msg_id=msg_id,
                 user_name=user_name,
                 text=text,
+                date=datetime.datetime.now(),
             )
             msg.save()
 
@@ -347,6 +396,23 @@ class Storage:
         )
         return user
 
+
+class SingletonDecorator:
+    def __init__(self, klass):
+        self.klass = klass
+        self.instance = None
+
+    def __call__(self, *args, **kwds):
+        if self.instance is None:
+            self.instance = self.klass(*args, **kwds)
+        return self.instance
+
+
+# Aseguramos una única instancia de conexión
+
+Storage = SingletonDecorator(Storage)
+
+storage = Storage()
 
 if __name__ == "__main__":
     storage = Storage()

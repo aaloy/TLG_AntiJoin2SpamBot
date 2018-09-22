@@ -6,6 +6,28 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 
+def debug_print_tlg(bot, text):
+    """Function to send text message to TLG chat just when DEBUG flag is active"""
+    if conf.DEBUG:
+        try:
+            bot.send_message(conf.DEBUG_TO_CHAT, text)
+            log.debug("{}-{}".format(conf.DEBUG_TO_CHAT, text))
+        except:
+            pass
+
+
+def _get_user_alias(args):
+    """Buids the user alias from the bot command"""
+    user_alias = ""
+    if len(args) >= 1:
+        for arg in args:
+            if user_alias == "":
+                user_alias = arg
+            else:
+                user_alias = "{} {}".format(user_alias, arg)
+    return user_alias
+
+
 def get_chat_admins_ids(bot, chat_id):
     """Returns a list with the ids of the administrators
     for the given chat_id and bot
