@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bot VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-09-22 11:31+0200\n"
-"PO-Revision-Date: 2018-09-22 11:35+0200\n"
+"POT-Creation-Date: 2018-09-25 21:33+0200\n"
+"PO-Revision-Date: 2018-09-25 21:40+0200\n"
 "Last-Translator: Antoni Aloy <antoni.aloy@gmail.com>\n"
 "Language: es\n"
 "Language-Team: \n"
@@ -19,82 +19,35 @@ msgstr ""
 "Generated-By: Babel 2.6.0\n"
 "X-Generator: Poedit 2.0.6\n"
 
-#: ajsbot.py:150
-msgid ""
-"The Bot has been added to a new group:\n"
-"\n"
-"- ID: {}\n"
-msgstr ""
-"El Bot ha sido añadido a un nuevo grupo:\n"
-"\n"
-"- ID: {} \n"
-
-#: ajsbot.py:154
-msgid "{}- Title: {}\n"
-msgstr "{}- Título: {}\n"
-
-#: ajsbot.py:156
-msgid "{}- Title: Unknown\n"
-msgstr "{}- Título: Desconocido\n"
-
-#: ajsbot.py:161
-msgid "{}- Link: {}\n"
-msgstr "{}- Link: {}\n"
-
-#: ajsbot.py:163
-msgid "{}- Link: Unknown\n"
-msgstr "{}- Link: Desconocido\n"
-
-#: ajsbot.py:169
-msgid ""
-"Hello, I am a Bot that fight against Spammers that join groups to publish "
-"their\n"
-"annoying and unwanted info. To work properly, give me Admin privileges.\n"
-"Check /help command for more information about my usage."
-msgstr ""
-"¡Hola! Soy un Bot que lucha contra los Spammers que se unen a los grupos "
-"para publicar su\n"
-"información molesta y no solicitada. Para que pueda funcionar "
-"adecuadamente,  necesito privilegios de Admin.\n"
-"Ejecuta el comando /help para tener más información sobre mi uso."
-
-#: ajsbot.py:517 ajsbot.py:888
+#: commands.py:55 commands.py:417
 msgid "Help file {} not found"
 msgstr "Fichero de ayuda {} no encontrado"
 
-#: ajsbot.py:530
+#: commands.py:68
 msgid "commands help file {} not found"
 msgstr "Archivo de ayuda de comandos {} no encontrado"
 
-#: ajsbot.py:772
+#: commands.py:301
 msgid "User {} has ben considered a potential spammer"
 msgstr "El usuario {} ha sido considerado como un spammer potencial"
 
-#: ajsbot.py:776
+#: commands.py:305
 msgid "User not found"
 msgstr "Usuario no encontrado"
 
-#: ajsbot.py:875
+#: commands.py:404
 msgid "Actual Bot version: {}"
 msgstr "Versión actual del bot: {}"
 
-#: ajsbot.py:897
+#: commands.py:426
 msgid "These are the admins {}"
 msgstr "Estos son los admins {}"
 
-#: ajsbot.py:899
-msgid ""
-"this *is* \n"
-"a _great_ test\n"
-"\n"
-"no trobes"
-msgstr ""
-"this *is* \n"
-"a _great_ test\n"
-"\n"
-"no trobes"
+#: commands.py:430
+msgid "import this"
+msgstr "import this"
 
-#: constants.py:87
+#: constants.py:89
 msgid ""
 "I am a Bot that fight against Spammers that join groups to publish their "
 "annoying and unwanted info. Check /help command for more information about "
@@ -104,7 +57,7 @@ msgstr ""
 "publicar su información molesta y no deseada. Ejecuta el comando /help para "
 "obtener más información sobre mi uso."
 
-#: constants.py:90
+#: constants.py:92
 msgid ""
 "Hello, I am a Bot that fight against Spammers that join groups to publish "
 "their annoying and unwanted info. To work properly, give me Admin privileges."
@@ -115,7 +68,7 @@ msgstr ""
 "me des privilegios de Admin. Ejecuta el comando /help para obtener más "
 "información sobre mi uso."
 
-#: constants.py:93
+#: constants.py:95
 msgid ""
 "Hello {}! Welcome! Please read the group norms in pinned message. This group "
 "as a bot (me) to fight against spammers. Use the /status command to know my "
@@ -127,52 +80,28 @@ msgid ""
 "\n"
 "Hours until allow URLs:\n"
 " {}\n"
-"\n"
-"Admins call when Spam detected:\n"
-"{}\n"
-"\n"
-"Allow users to add Bots:\n"
-"{}\n"
-"\n"
-"Anti-Spam:\n"
-" {}\n"
 msgstr ""
-"¡Hola {} bienvenido/a! Por favor, lee las normas del grupo que figuran en el "
-"mensaje fijado. Este grupo cuenta con un bot (yo) para luchar contra los "
-"spammers. Puedes ver mis parámetros en /status y utilizar /help para tener "
-"más información.\n"
-"\n"
+"¡Hola {}! ¡Bienvenido/a! Por favor, lee las normas del grupo que se "
+"encuentran en el mensaje fijado. Este grupo tiene un bot (yo) que se encarga "
+"de ayudar en la lucha contra los spammers. Utiliza el comando /status para "
+"conocer mis parámetros y el comando /help para saber más sobre mi.\n"
 "Configuración actual:\n"
-"————————————————\n"
-"Número de mensajes para permitir URLs:\n"
-"{}\n"
-"\n"
-"Horas antes de permitir URLs:\n"
-" {}\n"
-"\n"
-"Avisar a los Admins si hay spam:\n"
-"{}\n"
-"\n"
-"Permitir a los usuarios añadir Bots:\n"
-"{}\n"
-"\n"
-"Anti-Spam:\n"
-" {}\n"
-"\n"
+"Número de mensajes antes de permitir URLs en los mensajes: {}\n"
+"Número de horas antes de permitir URLs en los mensajes: {}\n"
 
-#: constants.py:96
+#: constants.py:98
 msgid "Just an Admin can use this command"
 msgstr "Solo un Admin puede usar este comando"
 
-#: constants.py:97
+#: constants.py:99
 msgid "This command just can be use in a private chat."
 msgstr "Este comando solamente se puede utilizar en un chat privado."
 
-#: constants.py:98
+#: constants.py:100
 msgid "This command just can be use by the Owner of the Bot."
 msgstr "Este comando solamente lo puede ejecutar el propietario del Bot."
 
-#: constants.py:99
+#: constants.py:101
 msgid ""
 "Ok, tell me now the message that you want that I publish in all the Chats "
 "where I am...\n"
@@ -184,7 +113,7 @@ msgstr ""
 "\n"
 "Usa el comando /notify_discard si no quieres seguir con la publicación."
 
-#: constants.py:102
+#: constants.py:104
 msgid ""
 "A massive publish is already running, please wait until it finish before "
 "send another."
@@ -192,23 +121,23 @@ msgstr ""
 "Una publicación masiva se está ya ejecutando, por favor espera a que acabe "
 "antes de iniciar otra."
 
-#: constants.py:105
+#: constants.py:107
 msgid "Message published in all the chats where I am."
 msgstr "Mensaje publicado en todos los canales en los que estoy."
 
-#: constants.py:106
+#: constants.py:108
 msgid "Massive publish discarted."
 msgstr "Publicación masiva descartada."
 
-#: constants.py:107
+#: constants.py:109
 msgid "The massive publish is not running."
 msgstr "La publicación masiva no se está ejecutando."
 
-#: constants.py:108
+#: constants.py:110
 msgid "Language changed to {}."
 msgstr "Idioma cambiado a {}."
 
-#: constants.py:109
+#: constants.py:111
 msgid ""
 "I am already in english.\n"
 "\n"
@@ -220,7 +149,7 @@ msgstr ""
 "Querías decir tal vez:\n"
 "/language es"
 
-#: constants.py:110
+#: constants.py:112
 msgid ""
 "Invalid language provided. The actual languages supported are english and "
 "spanish, change any of them using en or es.\n"
@@ -236,7 +165,7 @@ msgstr ""
 "/language en\n"
 "/language es"
 
-#: constants.py:113
+#: constants.py:115
 msgid ""
 "The command needs a language to set (en - english, es - spanish).\n"
 "\n"
@@ -250,7 +179,7 @@ msgstr ""
 "/language en\n"
 "/language es"
 
-#: constants.py:116
+#: constants.py:118
 msgid ""
 "Actual configuration:\n"
 "————————————————\n"
@@ -286,7 +215,7 @@ msgstr ""
 "Anti-Spam:\n"
 " {}\n"
 
-#: constants.py:119
+#: constants.py:121
 msgid ""
 "Time successfully changed.\n"
 "\n"
@@ -296,13 +225,13 @@ msgstr ""
 "\n"
 "Los nuevos usuarios necesitan esperar {} horas antes de poder publicar URLs."
 
-#: constants.py:122
+#: constants.py:124
 msgid "Invalid time provided. The hours need to be positives."
 msgstr ""
 "El valor de tiempo proporcionado no es válido. Las horas necesitan ser "
 "positivas."
 
-#: constants.py:125
+#: constants.py:127
 msgid ""
 "Invalid time provided. You need to specify how many hours want to set for a "
 "new user to wait, until get allowed to publish URLs in messages.\n"
@@ -319,7 +248,7 @@ msgstr ""
 "/set_hours 5\n"
 " /set_hours 24"
 
-#: constants.py:128
+#: constants.py:130
 msgid ""
 "No time provided. You need to specify how many hours want to set for a new "
 "user to wait, until get allowed to publish URLs in messages.\n"
@@ -336,7 +265,7 @@ msgstr ""
 "/set_hours 5\n"
 " /set_hours 24"
 
-#: constants.py:131
+#: constants.py:133
 msgid ""
 "Number of messages successfully changed.\n"
 "\n"
@@ -348,13 +277,13 @@ msgstr ""
 "Los nuevos usuarios necesitarán enviar {} mensajes antes de poder publicar "
 "URLs en sus mensajes."
 
-#: constants.py:134
+#: constants.py:136
 msgid ""
 "Invalid number of messages provided. The number of messages needs to be "
 "positive."
 msgstr "El valor para el número de mensajes no es correcto. Debe ser positivo."
 
-#: constants.py:137
+#: constants.py:139
 msgid ""
 "Invalid number of messages provided. You need to specify how many messages "
 "want to set for a new user to wait, until get allowed to publish URLs in "
@@ -372,7 +301,7 @@ msgstr ""
 "/set_messages 5\n"
 "/set_messages 20"
 
-#: constants.py:140
+#: constants.py:142
 msgid ""
 "No number of messages provided. You need to specify how many messages want "
 "to set for a new user to wait, until get allowed to publish URLs in "
@@ -390,19 +319,19 @@ msgstr ""
 "/set_messages 5\n"
 "/set_messages 20"
 
-#: constants.py:143
+#: constants.py:145
 msgid "User {} granted to publish URLs in messages."
 msgstr "Se ha permitido al usuario {} publicar URLs en sus mensajes."
 
-#: constants.py:144
+#: constants.py:146
 msgid "User {} is already allowed to publish URLs in messages."
 msgstr "El usuario {} ya tenía permitido publicar URLs en sus mensajes."
 
-#: constants.py:147
+#: constants.py:149
 msgid "User not found in my data base."
 msgstr "No se encontró al usuario en mi base de datos."
 
-#: constants.py:148
+#: constants.py:150
 msgid ""
 "No user provided. You need to specify the user alias/name that we want to "
 "give permission to publish URLs in messages.\n"
@@ -418,23 +347,23 @@ msgstr ""
 "/allow_user @mr_doe\n"
 "/allow_user Jhon Doe"
 
-#: constants.py:151
+#: constants.py:153
 msgid "Anti-Spam enabled. Stop it with /disable command."
 msgstr "Anti-Spam activado. Desactívalo con el comando /disable ."
 
-#: constants.py:152
+#: constants.py:154
 msgid "Anti-Spam disabled. Start it with /enable command."
 msgstr "Anti-Spam desactivado. Actívalo con el comando /enable ."
 
-#: constants.py:153
+#: constants.py:155
 msgid "I am already enabled."
 msgstr "Ya estoy activo."
 
-#: constants.py:154
+#: constants.py:156
 msgid "I am already disabled."
 msgstr "Ya estoy deshabilitado."
 
-#: constants.py:155
+#: constants.py:157
 msgid ""
 "Anti-Spam message:\n"
 "————————————————\n"
@@ -442,7 +371,7 @@ msgstr ""
 "Mensaje anti-spam:\n"
 "————————————————\n"
 
-#: constants.py:156
+#: constants.py:158
 msgid ""
 "Spam message detected, but I don't have permission for remove it. Please, "
 "give me administration privileges for delete messages ;)"
@@ -450,13 +379,13 @@ msgstr ""
 "Se ha detectado un mensaje de spam, pero no tengo permisos para eliminarlo. "
 "Por favor, dame permisos de administración para poder borrar mensajes. ;)"
 
-#: constants.py:159
+#: constants.py:161
 msgid "Message from user {} removed for the sake of a free of Spam Telegram."
 msgstr ""
 "El mensaje del usuario {} se ha eliminado en aras de mantener Telegram libre "
 "de Spam."
 
-#: constants.py:162
+#: constants.py:164
 msgid ""
 "\n"
 "\n"
@@ -468,7 +397,7 @@ msgstr ""
 "Los nuevos miembros necesitan escribir <b>{} mensajes</b> y espear <b>{} "
 "horas</b> antes de poder publicar URLs en sus mensajes."
 
-#: constants.py:165
+#: constants.py:167
 msgid ""
 "\n"
 "\n"
@@ -482,27 +411,27 @@ msgstr ""
 "\n"
 "{}"
 
-#: constants.py:166
+#: constants.py:168
 msgid "There is not Admins in this chat."
 msgstr "No hay Admin en este chat."
 
-#: constants.py:167
+#: constants.py:169
 msgid "Automatic call Admins when Spam is detected enabled."
 msgstr "Llamar automáticamente a los Admins si se detecta Spam activado."
 
-#: constants.py:168
+#: constants.py:170
 msgid "Automatic call Admins when Spam is detected disabled."
 msgstr "Llamar automáticamente a los Admins si se detecta Spam desactivado."
 
-#: constants.py:171
+#: constants.py:173
 msgid "Call Admins when Spam is detected is already enabled."
 msgstr "Llamar automáticamente a los Admins si se detecta Spam ya activado."
 
-#: constants.py:174
+#: constants.py:176
 msgid "Call Admins when Spam is detected is already disabled."
 msgstr "Llamar automáticamente a los Admins si se detecta Spam ya desactivado."
 
-#: constants.py:177
+#: constants.py:179
 msgid ""
 "The command needs enable/disable keyword.\n"
 "\n"
@@ -516,25 +445,25 @@ msgstr ""
 "/call_when_spam enable\n"
 "/ call_when_spam disable"
 
-#: constants.py:180
+#: constants.py:182
 msgid "Allow users to add Bots enabled."
 msgstr ""
 "/call_when_spam enable\n"
 "/ call_when_spam disable"
 
-#: constants.py:181
+#: constants.py:183
 msgid "Allow users to add Bots disabled."
 msgstr "Permitir a los usuarios añadir Bots desactivado."
 
-#: constants.py:182
+#: constants.py:184
 msgid "Allow users to add Bots is already enabled."
 msgstr "Permitir a los usuarios añadir Bots ya activado."
 
-#: constants.py:183
+#: constants.py:185
 msgid "Allow users to add Bots is already disabled."
 msgstr "Permitir a los usuarios añadir Bots ya desactivado."
 
-#: constants.py:184
+#: constants.py:186
 msgid ""
 "The command needs enable/disable keyword.\n"
 "\n"
@@ -548,7 +477,7 @@ msgstr ""
 "/users_add_bots enable\n"
 "/users_add_bots disable"
 
-#: constants.py:187
+#: constants.py:189
 msgid ""
 "This group doesn't allow that users invite and add Bots.\n"
 "\n"
@@ -559,7 +488,7 @@ msgstr ""
 "El usuario {} trató de añadir al bot {}. El bot ha sido eliminado y "
 "bloqueado."
 
-#: constants.py:190
+#: constants.py:192
 msgid ""
 "This group don't allow users to invite and add Bots.\n"
 "\n"
@@ -572,11 +501,11 @@ msgstr ""
 "El usuario {} trató de añadir al bot {}. He intentado banera al Bot pero no "
 "tengo permisos para hacerlo. Por favor, dadme permisos de administración. ;)"
 
-#: constants.py:193
+#: constants.py:195
 msgid "Can't use this command in the current chat."
 msgstr "No puedo utilizar este comando en el chat actual."
 
-#: constants.py:194
+#: constants.py:196
 msgid ""
 "Anti-Spam Warning:\n"
 "————————————————\n"
@@ -590,7 +519,7 @@ msgstr ""
 "\n"
 "'{} se ha unido al chat.'"
 
-#: constants.py:197
+#: constants.py:199
 msgid ""
 "Anti-Spam Warning:\n"
 "————————————————\n"
@@ -608,7 +537,7 @@ msgstr ""
 "\n"
 "{} se ha unido al chat."
 
-#: constants.py:200
+#: constants.py:202
 msgid ""
 "Anti-Spam Warning:\n"
 "————————————————\n"
@@ -622,7 +551,7 @@ msgstr ""
 "\n"
 "{} se unió al chat."
 
-#: constants.py:203
+#: constants.py:205
 msgid ""
 "Anti-Spam Warning:\n"
 "————————————————\n"
@@ -640,7 +569,7 @@ msgstr ""
 "\n"
 "{} se unió al chat."
 
-#: constants.py:206
+#: constants.py:208
 msgid ""
 "\n"
 "————————————————\n"
@@ -648,13 +577,107 @@ msgstr ""
 "\n"
 "————————————————\n"
 
-#: constants.py:207
+#: constants.py:209
 msgid ""
 "\n"
 "————————————————————————————————————————————————\n"
 msgstr ""
 "\n"
 "————————————————————————————————————————————————\n"
+
+#: events.py:62
+msgid ""
+"The Bot has been added to a new group:\n"
+"\n"
+"- ID: {}\n"
+msgstr ""
+"El Bot ha sido añadido a un nuevo grupo:\n"
+"\n"
+"- ID: {} \n"
+
+#: events.py:67
+msgid "{}- Title: {}\n"
+msgstr "{}- Título: {}\n"
+
+#: events.py:69
+msgid "{}- Title: Unknown\n"
+msgstr "{}- Título: Desconocido\n"
+
+#: events.py:74
+msgid "{}- Link: {}\n"
+msgstr "{}- Link: {}\n"
+
+#: events.py:76
+msgid "{}- Link: Unknown\n"
+msgstr "{}- Link: Desconocido\n"
+
+#: events.py:84
+msgid ""
+"Hello, I am a Bot that fight against Spammers that join groups to publish "
+"their\n"
+"annoying and unwanted info. To work properly, give me Admin privileges.\n"
+"Check /help command for more information about my usage."
+msgstr ""
+"¡Hola! Soy un Bot que lucha contra los Spammers que se unen a los grupos "
+"para publicar su\n"
+"información molesta y no solicitada. Para que pueda funcionar "
+"adecuadamente,  necesito privilegios de Admin.\n"
+"Ejecuta el comando /help para tener más información sobre mi uso."
 
 #~ msgid "Language changed to english."
 #~ msgstr "Idioma cambiado a inglés ."
+
+#~ msgid ""
+#~ "this *is* \n"
+#~ "a _great_ test\n"
+#~ "\n"
+#~ "no trobes"
+#~ msgstr ""
+#~ "this *is* \n"
+#~ "a _great_ test\n"
+#~ "\n"
+#~ "no trobes"
+
+#~ msgid ""
+#~ "Hello {}! Welcome! Please read the group norms in pinned message. This "
+#~ "group as a bot (me) to fight against spammers. Use the /status command to "
+#~ "know my parameters and /help to know more about me. \n"
+#~ " Actual configuration:\n"
+#~ "————————————————\n"
+#~ "Number of messages to allow URLs:\n"
+#~ "{}\n"
+#~ "\n"
+#~ "Hours until allow URLs:\n"
+#~ " {}\n"
+#~ "\n"
+#~ "Admins call when Spam detected:\n"
+#~ "{}\n"
+#~ "\n"
+#~ "Allow users to add Bots:\n"
+#~ "{}\n"
+#~ "\n"
+#~ "Anti-Spam:\n"
+#~ " {}\n"
+#~ msgstr ""
+#~ "¡Hola {} bienvenido/a! Por favor, lee las normas del grupo que figuran en "
+#~ "el mensaje fijado. Este grupo cuenta con un bot (yo) para luchar contra "
+#~ "los spammers. Puedes ver mis parámetros en /status y utilizar /help para "
+#~ "tener más información.\n"
+#~ "\n"
+#~ "Configuración actual:\n"
+#~ "————————————————\n"
+#~ "Número de mensajes para permitir URLs:\n"
+#~ "{}\n"
+#~ "\n"
+#~ "Horas antes de permitir URLs:\n"
+#~ " {}\n"
+#~ "\n"
+#~ "Avisar a los Admins si hay spam:\n"
+#~ "{}\n"
+#~ "\n"
+#~ "Permitir a los usuarios añadir Bots:\n"
+#~ "{}\n"
+#~ "\n"
+#~ "Anti-Spam:\n"
+#~ " {}\n"
+#~ "\n"
