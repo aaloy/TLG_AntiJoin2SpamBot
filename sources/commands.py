@@ -241,11 +241,16 @@ def cmd_allow_user(bot, update, args):
     chat_type = update.message.chat.type
     user_id = update.message.from_user.id
     chat_config = storage.get_chat_config(chat_id)
+    lang = chat_config.language
     # command user
-    command_user = storage.get_user(user_id=user_id, chat_id=chat_id)
+    try:
+        command_user = storage.get_user(user_id=user_id, chat_id=chat_id)
+    except UserDoesNotExists:
+        bot_msg = msg(lang, "CMD_ALLOW_USR_NOT_FOUND")
+        send_bot_msg(chat_type, bot, chat_id, bot_msg, update)
+        return
     # destination_user
     destination_user_alias = _get_user_alias(args)
-    lang = chat_config.language
 
     if command_user.is_admin(bot):
         try:
