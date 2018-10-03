@@ -403,7 +403,11 @@ def link_control(bot, update):
         user.save()
 
     entities = update.message.parse_entities()
-    log.info("Found {} links".format(len(entities.items())))
+    log.info(
+        "Found {} links on {}".format(
+            len(entities.items()), update.message.from_user.name
+        )
+    )
     if not user.can_post_links(bot):
         log.info("User {} can't post links in {}".format(user_id, chat_id))
         try:
