@@ -28,19 +28,22 @@ log = logging.getLogger(__name__)
 
 def cmd_start(bot, update):
     """Command /start message handler"""
+    chat = update.message.chat
     chat_id = update.message.chat_id
-    chat_type = update.message.chat.type
+    chat_type = chat.type
     chat_config = storage.get_chat_config(chat_id)
     chat_config.enabled = True
-    chat_config.save()
     lang = chat_config.language
+
     if chat_type == "private":
         log.info("The bot started in {} private chat".format(chat_id))
         bot.send_message(chat_id, msg(lang, "START"))
     else:
-        log.info("The bot started in {} group chat".format(chat_id))
+        log.info("The bot started in {} group chat {}".format(chat_id, chat.title))
+        chat_config.title = chat.title
         tlg_msg_to_selfdestruct(bot, update.message)
         tlg_send_selfdestruct_msg(bot, chat_id, msg(lang, "START"))
+    chat_config.save()
 
 
 def cmd_help(bot, update):
@@ -163,9 +166,9 @@ def cmd_call_admins(bot, update):
     chat_config = storage.get_chat_config(chat_id)
     admins = chat_config.get_admins_usernames_in_string(bot)
     if admins:
-        bot_msg = msg(chat_config.lang, "CALLING_ADMINS").format(admins)
+        bot_msg = msg(chat_config.language, "CALLING_ADMINS").format(admins)
     else:
-        bot_msg = msg(chat_config.lang, "CALLING_ADMINS_NO_ADMINS")
+        bot_msg = msg(chat_config.language, "CALLING_ADMINS_NO_ADMINS")
     bot.send_message(chat_id, bot_msg)
 
 
@@ -420,12 +423,14 @@ def cmd_about(bot, update):
 
 def cmd_test(bot, update):
     """Command for test purposes"""
+    chat = update.message.chat
     chat_id = update.message.chat_id
     chat_config = storage.get_chat_config(chat_id)
     set_language(chat_config.language)
     info = _("These are the admins {}").format(
         chat_config.get_admins_usernames_in_string(bot)
     )
+    info += _("Chat title: {}").format(chat.title)
     tlg_send_selfdestruct_msg(bot, chat_id, info)
     other_info = _("import this")
 

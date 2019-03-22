@@ -22,16 +22,13 @@ now sensible default values.
 
 * Bot rename, first to lower case, then to a new different name.
 
-### TODO
-
-* More cleaning and refactoring. Check for unused functions and duplicated code.
-* ~Move to gettext files for message translation~
-* Split bot code in modules:
+* Moved message translation to gettext files
+* Splited the bot code in modules:
 	* commands
 	* messages
 	* exceptions
-* Add more options to restrict users
-* Add a fast command to delete the last message and restrict the user.
+* Addedd an option to restrict users
+* Add a fast command to delete the last message and restrict an annoying user.
 
 
 
@@ -137,6 +134,8 @@ Note: If you install the bot (as me) on a RPi and use pipenv you'll have some wa
 /users_add_bots - Enable/disable allow users to invite and add Bots to the group.
 
 /allow_user - Allow an user to publish URLs in messages.
+
+/disable_usr - Disables a user, so he can't post links and is considered a potential spammer.
 
 /enable - Enable the Anti-Spam.
 
