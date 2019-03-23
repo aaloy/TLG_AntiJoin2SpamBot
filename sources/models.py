@@ -44,6 +44,10 @@ class BaseModel(Model):
         database = db
 
 
+class WhiteList(BaseModel):
+    url = CharField(default="", index=True)
+
+
 class Chat(BaseModel):
     chat_id = BigIntegerField(primary_key=True)
     created_date = DateTimeField(default=datetime.datetime.now)
@@ -267,7 +271,7 @@ class Config(BaseModel):
 
 class Storage:
     def __init__(self):
-        db.create_tables([Chat, Config, User, Message, ToDestroy])
+        db.create_tables([Chat, Config, User, Message, ToDestroy, WhiteList])
         db.connect(reuse_if_open=True)
         self.db = db
 
@@ -347,6 +351,11 @@ class Storage:
 
     def get_chats(self):
         return Chat.select()
+
+    def is_link_in_white_list(self, link):
+        """Returns true if the link is in the
+      white list"""
+        return WhiteList.select().where(WhiteList.url == link).count() > 0
 
     def get_user_from_alias(self, chat_id, user_alias):
         """Get a user from its alias. Returns None if the

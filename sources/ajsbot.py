@@ -73,12 +73,12 @@ def main():
     updater = Updater(conf.TOKEN)
     dp = updater.dispatcher
 
-    link_sandox_handler = MessageHandler(
+    link_sanbox_handler = MessageHandler(
         Filters.text
         & (Filters.entity(MessageEntity.URL) | Filters.entity(MessageEntity.TEXT_LINK)),
         events.link_control,
     )
-    dp.add_handler(link_sandox_handler)
+    dp.add_handler(link_sanbox_handler)
 
     # Set to dispatcher a not-command messages handler
     dp.add_handler(

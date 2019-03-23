@@ -5,6 +5,7 @@ import models
 import datetime
 from telegram.error import BadRequest
 from urlextract import URLExtract
+import tldextract
 from utils import msg, text_msg, debug_print_tlg
 import constants as conf
 import notifications
@@ -408,17 +409,29 @@ def link_control(bot, update):
             len(entities.items()), update.message.from_user.name
         )
     )
+
     if not user.can_post_links(bot):
-        log.info("User {} can't post links in {}".format(user_id, chat_id))
-        try:
-            storage.save_message(chat_id, user_id, msg_id, message.text)
-            result = bot.delete_message(chat_id, msg_id)
-        except BadRequest:
-            result = False
-        if result:
-            log.info("Message {} deleted".format(msg_id))
+        # check if the links are in the white list
+        in_white_list = False
+        for e, link in entities.items():
+            log.info("detected {}".format(link))
+            ext = tldextract.extract(link)
+            if not storage.is_link_in_white_list(ext.registered_domain):
+                break
         else:
-            log.error("Error deleting msg {}".format(msg_id))
+            in_white_list = True
+            log.info("All links in white list")
+        if not in_white_list:
+            log.info("User {} can't post links in {}".format(user_id, chat_id))
+            try:
+                storage.save_message(chat_id, user_id, msg_id, message.text)
+                result = bot.delete_message(chat_id, msg_id)
+            except BadRequest:
+                result = False
+            if result:
+                log.info("Message {} deleted".format(msg_id))
+            else:
+                log.error("Error deleting msg {}".format(msg_id))
     else:
         user.num_messages = chat_config.num_messages_for_allow_urls + 1
         user.try_to_verify(chat_id, datetime.datetime(1971, 1, 1))

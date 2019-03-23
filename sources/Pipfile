@@ -9,6 +9,7 @@ filelock = "*"
 urlextract = "*"
 peewee = "*"
 pip = "*"
+tldextract = "*"
 
 [dev-packages]
 pylint = "*"
