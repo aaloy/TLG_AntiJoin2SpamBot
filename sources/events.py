@@ -310,8 +310,11 @@ def msg_nocmd(bot, update):
     """
     global owner_notify
 
+    check_forwards(bot, update)
+
     message = update.message
     chat_id = message.chat_id
+
     chat_config = storage.get_chat_config(chat_id)
     if not chat_config.enabled:
         return
@@ -374,11 +377,35 @@ def msg_nocmd(bot, update):
             user.save()
 
 
+def check_forwards(bot, update):
+    """ We do not allow forwads fron any bot. This is to avoid attach that
+    uses legitimate users to perform their spam
+    """
+
+    message = update.message
+    chat_id = message.chat.id
+    msg_id = message.message_id
+    user_id = message.from_user.id
+    forward_from = message.forward_from
+
+    if forward_from.is_bot:
+        try:
+            storage.save_message(chat_id, user_id, msg_id, message.text)
+            result = bot.delete_message(chat_id, msg_id)
+        except BadRequest:
+            result = False
+        if result:
+            log.info("Message {} deleted".format(msg_id))
+        else:
+            log.error("Error deleting msg {}".format(msg_id))
+
+
 def link_control(bot, update):
     """ This hook control if a user can post links or not
     in a message group. If the user is not allowed to post link,
     for any restriction applied, the whole message is deleted.
     """
+    check_forwards(bot, update)
     message = update.message
     chat_id = message.chat.id
     chat_config = storage.get_chat_config(chat_id)

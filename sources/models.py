@@ -1,4 +1,3 @@
-
 from peewee import (
     SqliteDatabase,
     Model,
@@ -338,6 +337,7 @@ class Storage:
             user_name = user.user_name
         except User.DoesNotExist:
             user_name = "Not in database"
+            chat, created = Chat.get_or_create(chat_id=chat_id)
         if conf.SAVE_CHAT_MESSAGES:
             msg = Message(
                 user_id=user_id,

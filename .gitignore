@@ -5,3 +5,4 @@ sources/data/
 *.pyc
 *.log
 config.py
+.env
