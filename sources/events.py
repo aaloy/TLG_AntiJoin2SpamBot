@@ -388,7 +388,7 @@ def check_forwards(bot, update):
     user_id = message.from_user.id
     forward_from = message.forward_from
 
-    if forward_from.is_bot:
+    if hasattr(forward_from, "is_bot") and forward_from.is_bot:
         try:
             storage.save_message(chat_id, user_id, msg_id, message.text)
             bot.delete_message(chat_id, msg_id)
