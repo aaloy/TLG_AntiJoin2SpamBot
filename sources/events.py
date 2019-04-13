@@ -391,13 +391,11 @@ def check_forwards(bot, update):
     if forward_from.is_bot:
         try:
             storage.save_message(chat_id, user_id, msg_id, message.text)
-            result = bot.delete_message(chat_id, msg_id)
+            bot.delete_message(chat_id, msg_id)
         except BadRequest:
-            result = False
-        if result:
-            log.info("Message {} deleted".format(msg_id))
-        else:
             log.error("Error deleting msg {}".format(msg_id))
+        else:
+            log.info("Message {} deleted".format(msg_id))
 
 
 def link_control(bot, update):
@@ -452,13 +450,12 @@ def link_control(bot, update):
             log.info("User {} can't post links in {}".format(user_id, chat_id))
             try:
                 storage.save_message(chat_id, user_id, msg_id, message.text)
-                result = bot.delete_message(chat_id, msg_id)
+                bot.delete_message(chat_id, msg_id)
             except BadRequest:
-                result = False
-            if result:
-                log.info("Message {} deleted".format(msg_id))
-            else:
                 log.error("Error deleting msg {}".format(msg_id))
+            else:
+                log.info("Message {} deleted".format(msg_id))
+
     else:
         user.num_messages = chat_config.num_messages_for_allow_urls + 1
         user.try_to_verify(chat_id, datetime.datetime(1971, 1, 1))
