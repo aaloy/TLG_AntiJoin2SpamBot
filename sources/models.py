@@ -15,6 +15,7 @@ import logging
 from pathlib import Path
 from urlextract import URLExtract
 from exceptions import UserDoesNotExists
+import re
 
 log = logging.getLogger(__name__)
 db_path = "{}".format((Path(conf.DATA_DIR) / conf.DATABASE_NAME).resolve())
@@ -386,12 +387,16 @@ class Storage:
         return BlackList.select().where(BlackList.url == link).count() > 0
 
     def is_name_in_black_list(self, names):
-        """Returns True is name is in black list"""
+        """Returns True is name is in black list
+            TODO: Optimize
+        """
         bl = [x.name for x in BlackListName.select()]
-        for name in names:
-            if name in bl:
-                return True
-        return False
+        my_re = "|".join(bl)
+        tester = re.compile(
+            my_re, re.IGNORECASE | re.MULTILINE | re.DOTALL | re.VERBOSE
+        )
+        to_test = " ".join(names)
+        return tester.match(to_test) is not None
 
     def get_user_from_alias(self, chat_id, user_alias):
         """Get a user from its alias. Returns None if the
