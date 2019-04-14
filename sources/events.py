@@ -184,10 +184,17 @@ def new_user(bot, update):
 
     lang = chat_config.language
     # For each new user that join or has been added
+
     for join_user in message.new_chat_members:
         join_user_id = join_user.id
         join_user_alias = join_user.name
         join_user_name = "{} {}".format(join_user.first_name, join_user.last_name)
+
+        # we do not allow certain user names
+        if storage.is_name_in_black_list([join_user_alias, join_user_name]):
+            bot.kickChatMember(chat_id, join_user_id)
+            delete_message(chat_id, join_user_id, message_id, message, bot)
+            continue
 
         # If the added user is not myself (this Bot)
         if bot.id == join_user_id:

@@ -54,6 +54,12 @@ class BlackList(BaseModel):
     url = CharField(default="", index=True)
 
 
+class BlackListName(BaseModel):
+    """Names not allowed. message banned"""
+
+    name = CharField(default="", index=True)
+
+
 class Chat(BaseModel):
     chat_id = BigIntegerField(primary_key=True)
     created_date = DateTimeField(default=datetime.datetime.now)
@@ -277,7 +283,18 @@ class Config(BaseModel):
 
 class Storage:
     def __init__(self):
-        db.create_tables([Chat, Config, User, Message, ToDestroy, WhiteList, BlackList])
+        db.create_tables(
+            [
+                Chat,
+                Config,
+                User,
+                Message,
+                ToDestroy,
+                WhiteList,
+                BlackList,
+                BlackListName,
+            ]
+        )
         db.connect(reuse_if_open=True)
         self.db = db
 
@@ -367,6 +384,14 @@ class Storage:
     def is_link_in_black_list(self, link):
         """Returns True if the link is in the Black List"""
         return BlackList.select().where(BlackList.url == link).count() > 0
+
+    def is_name_in_black_list(self, names):
+        """Returns True is name is in black list"""
+        bl = [x.name for x in BlackListName.select()]
+        for name in names:
+            if name in bl:
+                return True
+        return False
 
     def get_user_from_alias(self, chat_id, user_alias):
         """Get a user from its alias. Returns None if the
