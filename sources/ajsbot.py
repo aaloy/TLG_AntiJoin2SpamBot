@@ -140,6 +140,7 @@ def main():
         execl(sys.executable, sys.executable, *sys.argv)
 
     def restart(bot, update):
+        models.storage.clean_cache()
         update.message.reply_text("Bot is restarting...")
         Thread(target=stop_and_restart).start()
 

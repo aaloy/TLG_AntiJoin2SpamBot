@@ -15,6 +15,8 @@ import logging
 from pathlib import Path
 from urlextract import URLExtract
 from exceptions import UserDoesNotExists
+
+from functools import lru_cache
 import re
 
 log = logging.getLogger(__name__)
@@ -299,6 +301,9 @@ class Storage:
         db.connect(reuse_if_open=True)
         self.db = db
 
+    def clean_cache(self):
+        self._db_black_list_names.cache_clear()
+
     def get_user(self, user_id, chat_id):
         chat, created = Chat.get_or_create(chat_id=chat_id)
         if created:
@@ -386,12 +391,17 @@ class Storage:
         """Returns True if the link is in the Black List"""
         return BlackList.select().where(BlackList.url == link).count() > 0
 
+    @lru_cache
+    def _db_black_list_names(self):
+        bl = [x.name for x in BlackListName.select()]
+        my_re = "|".join(bl)
+        return my_re
+
     def is_name_in_black_list(self, names):
         """Returns True is name is in black list
             TODO: Optimize
         """
-        bl = [x.name for x in BlackListName.select()]
-        my_re = "|".join(bl)
+        my_re = self._db_black_list_names()
         tester = re.compile(
             my_re, re.IGNORECASE | re.MULTILINE | re.DOTALL | re.VERBOSE
         )
