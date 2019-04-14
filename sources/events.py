@@ -21,6 +21,16 @@ storage = models.storage
 log = logging.getLogger(__name__)
 
 
+def delete_message(chat_id, user_id, msg_id, message, bot):
+    try:
+        storage.save_message(chat_id, user_id, msg_id, message.text)
+        bot.delete_message(chat_id, msg_id)
+    except BadRequest:
+        log.error("Error deleting msg {}".format(msg_id))
+    else:
+        log.info("Message {} deleted".format(msg_id))
+
+
 def left_user(bot, update):
     """Member left the group event handler. On this case we try to
     avoid the message that telegram sends when removing the user
@@ -389,13 +399,7 @@ def check_forwards(bot, update):
     forward_from = message.forward_from
 
     if hasattr(forward_from, "is_bot") and forward_from.is_bot:
-        try:
-            storage.save_message(chat_id, user_id, msg_id, message.text)
-            bot.delete_message(chat_id, msg_id)
-        except BadRequest:
-            log.error("Error deleting msg {}".format(msg_id))
-        else:
-            log.info("Message {} deleted".format(msg_id))
+        delete_message(chat_id, user_id, msg_id, message, bot)
 
 
 def link_control(bot, update):
@@ -448,15 +452,18 @@ def link_control(bot, update):
             log.info("All links in white list")
         if not in_white_list:
             log.info("User {} can't post links in {}".format(user_id, chat_id))
-            try:
-                storage.save_message(chat_id, user_id, msg_id, message.text)
-                bot.delete_message(chat_id, msg_id)
-            except BadRequest:
-                log.error("Error deleting msg {}".format(msg_id))
-            else:
-                log.info("Message {} deleted".format(msg_id))
+            delete_message(chat_id, user_id, msg_id, message, bot)
 
     else:
-        user.num_messages = chat_config.num_messages_for_allow_urls + 1
-        user.try_to_verify(chat_id, datetime.datetime(1971, 1, 1))
-        user.save()
+        in_black_list = False
+        for e, link in entities.items():
+            ext = tldextract.extract(link)
+            if storage.is_link_in_black_list(ext.registered_domain):
+                in_black_list = True
+                delete_message(chat_id, user_id, msg_id, message, bot)
+                break
+        if in_black_list is False:
+            user.num_messages = chat_config.num_messages_for_allow_urls + 1
+            user.try_to_verify(chat_id, datetime.datetime(1971, 1, 1))
+            user.save()
+

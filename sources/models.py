@@ -47,6 +47,13 @@ class WhiteList(BaseModel):
     url = CharField(default="", index=True)
 
 
+class BlackList(BaseModel):
+    """Links not allowed. Message would be
+    deleted"""
+
+    url = CharField(default="", index=True)
+
+
 class Chat(BaseModel):
     chat_id = BigIntegerField(primary_key=True)
     created_date = DateTimeField(default=datetime.datetime.now)
@@ -270,7 +277,7 @@ class Config(BaseModel):
 
 class Storage:
     def __init__(self):
-        db.create_tables([Chat, Config, User, Message, ToDestroy, WhiteList])
+        db.create_tables([Chat, Config, User, Message, ToDestroy, WhiteList, BlackList])
         db.connect(reuse_if_open=True)
         self.db = db
 
@@ -356,6 +363,10 @@ class Storage:
         """Returns true if the link is in the
       white list"""
         return WhiteList.select().where(WhiteList.url == link).count() > 0
+
+    def is_link_in_black_list(self, link):
+        """Returns True if the link is in the Black List"""
+        return BlackList.select().where(BlackList.url == link).count() > 0
 
     def get_user_from_alias(self, chat_id, user_alias):
         """Get a user from its alias. Returns None if the
