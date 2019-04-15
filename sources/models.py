@@ -391,7 +391,7 @@ class Storage:
         """Returns True if the link is in the Black List"""
         return BlackList.select().where(BlackList.url == link).count() > 0
 
-    @lru_cache
+    @lru_cache(maxsize=128)
     def _db_black_list_names(self):
         bl = [x.name for x in BlackListName.select()]
         my_re = "|".join(bl)
