@@ -374,7 +374,7 @@ class Storage:
                 chat_id=chat_id,
                 msg_id=msg_id,
                 user_name=user_name,
-                text=text,
+                text=text or "-",
                 date=datetime.datetime.now(),
             )
             msg.save()
