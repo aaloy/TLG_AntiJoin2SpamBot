@@ -10,6 +10,7 @@ from utils import msg, text_msg, debug_print_tlg
 import constants as conf
 import notifications
 from exceptions import UserDoesNotExists
+#import ipdb
 
 # Globals ###
 
@@ -221,6 +222,19 @@ def new_user(bot, update):
                     )
                     continue
             if to_register_user:
+                if not storage.is_user_allowed_to_add_users(
+                    bot, msg_from_user_id, chat_id
+                ):
+                    log.warn(
+                        "%s is has tried to add another user",
+                        msg_from_user_id,
+                        exc_info=1,
+                    )
+                    bot.kickChatMember(chat_id, join_user_id)
+                    delete_message(chat_id, join_user_id, message_id, message, bot)
+                    continue
+
+            if to_register_user:
                 # Check if there is an URL in the user name
                 extractor = URLExtract()
                 has_url = extractor.has_urls(join_user_name) or extractor.has_urls(
@@ -317,6 +331,34 @@ def new_user(bot, update):
             log.info("{} added to the group {}".format(join_user_alias, chat_id))
 
 
+def foward_control(bot, update):
+    """Not allow recent users to foward messages, same restrictions apply than
+    in post links"""
+    message = update.message
+    chat_id = message.chat_id
+    chat_config = storage.get_chat_config(chat_id)
+    user_id = message.from_user.id
+
+    log.info("Forwad control %s", message.text, exc_info=1)
+    if not chat_config.enabled:
+        return
+
+    allowed = False
+
+    try:
+        user = storage.get_user(user_id=user_id, chat_id=chat_id)
+    except UserDoesNotExists:
+        pass
+    else:
+        if not user.is_admin(bot):
+            if user.can_post_links(bot):
+                allowed = True
+        else:
+            allowed = True
+    if allowed is False:
+        delete_message(chat_id, user_id, message.message_id, message, bot)
+
+
 def msg_nocmd(bot, update):
     """All Not-command messages handler.
         If the user does not exists assumes that the user joined before
@@ -327,17 +369,21 @@ def msg_nocmd(bot, update):
     """
     global owner_notify
 
-    check_forwards(bot, update)
-
     message = update.message
     chat_id = message.chat_id
+    user_id = message.from_user.id
+    msg_id = message.message_id
+
+    if not check_bot_forwards(bot, update):
+        delete_message(chat_id, user_id, msg_id, message, bot)
+        return
 
     chat_config = storage.get_chat_config(chat_id)
     if not chat_config.enabled:
         return
 
     chat_type = message.chat.type
-    user_id = message.from_user.id
+
     lang = chat_config.language
 
     if chat_type == "private":
@@ -394,9 +440,12 @@ def msg_nocmd(bot, update):
             user.save()
 
 
-def check_forwards(bot, update):
+def check_bot_forwards(bot, update):
     """ We do not allow forwads fron any bot. This is to avoid attach that
     uses legitimate users to perform their spam
+
+    Returns True if is allowed to post fowards or False if not and deletes
+    the offending message.
     """
 
     message = update.message
@@ -404,9 +453,12 @@ def check_forwards(bot, update):
     msg_id = message.message_id
     user_id = message.from_user.id
     forward_from = message.forward_from
+    is_allowed = True
 
     if hasattr(forward_from, "is_bot") and forward_from.is_bot:
+        is_allowed = False
         delete_message(chat_id, user_id, msg_id, message, bot)
+    return is_allowed
 
 
 def link_control(bot, update):
@@ -414,7 +466,10 @@ def link_control(bot, update):
     in a message group. If the user is not allowed to post link,
     for any restriction applied, the whole message is deleted.
     """
-    check_forwards(bot, update)
+
+    if not check_bot_forwards(bot, update):
+        # if not allowed the message has ben deleted
+        return
     message = update.message
     chat_id = message.chat.id
     chat_config = storage.get_chat_config(chat_id)

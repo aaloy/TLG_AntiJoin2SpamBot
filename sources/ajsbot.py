@@ -80,6 +80,10 @@ def main():
     )
     dp.add_handler(link_sanbox_handler)
 
+    foward_handler = MessageHandler(Filters.forwarded, events.foward_control)
+
+    dp.add_handler(foward_handler)
+
     # Set to dispatcher a not-command messages handler
     dp.add_handler(
         MessageHandler(

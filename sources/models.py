@@ -304,6 +304,37 @@ class Storage:
     def clean_cache(self):
         self._db_black_list_names.cache_clear()
 
+    def is_user_allowed_to_add_users(self, bot, user_id, chat_id):
+        chat, created = Chat.get_or_create(chat_id=chat_id)
+        if created:
+            return False
+        try:
+            user = User.get(User.chat == chat_id, User.user_id == user_id)
+        except User.DoesNotExist:
+            return False
+
+
+        if user.is_admin(bot) or user.is_verified:
+            return True
+
+        try:
+            chat_config = Config.get(chat_id=chat_id)
+        except Config.DoesNotExist:
+            return False
+
+        user_hours_in_group = (
+            datetime.datetime.now() - user.join_date
+        ).total_seconds() // 3600
+
+        value = (user_hours_in_group >= chat_config.time_for_allow_urls) or (
+            self.num_messages >= chat_config.num_messages_for_allow_urls
+        )
+        if value and not self.is_verified:
+            # if the user can post links mark it as verified
+            user.verified = True
+            user.save()
+        return value
+
     def get_user(self, user_id, chat_id):
         chat, created = Chat.get_or_create(chat_id=chat_id)
         if created:
@@ -405,7 +436,10 @@ class Storage:
         tester = re.compile(
             my_re, re.IGNORECASE | re.MULTILINE | re.DOTALL | re.VERBOSE
         )
-        to_test = " ".join(names)
+        if type(names) in [list, tuple]:
+            to_test = " ".join(names)
+        else:
+            to_test = names
         return tester.match(to_test) is not None
 
     def get_user_from_alias(self, chat_id, user_alias):
