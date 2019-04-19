@@ -24,13 +24,22 @@ log = logging.getLogger(__name__)
 
 
 def delete_message(chat_id, user_id, msg_id, message, bot):
+    """
+    Deteletes a message from a chat id.
+    Saves the message for reference
+    """
+
     try:
-        storage.save_message(chat_id, user_id, msg_id, message.text)
+        storage.save_message(chat_id, user_id, msg_id, message.text or "no message")
         bot.delete_message(chat_id, msg_id)
     except BadRequest:
-        log.error("Error deleting msg {}".format(msg_id))
+        log.error("Error deleting msg {} con chat {}".format(msg_id, chat_id))
     else:
-        log.info("Message {} deleted".format(msg_id))
+        log.info(
+            "Message {} from user {} in chat {} deleted".format(
+                msg_id, user_id, chat_id
+            )
+        )
 
 
 def left_user(bot, update):
@@ -195,6 +204,11 @@ def new_user(bot, update):
 
         # we do not allow certain user names
         if storage.is_name_in_black_list([join_user_alias, join_user_name]):
+            log.info(
+                "Possible spammer [blacklisted] kicked %s on chat %s",
+                join_user_name,
+                chat_id,
+            )
             bot.kickChatMember(chat_id, join_user_id)
             delete_message(chat_id, join_user_id, message_id, message, bot)
             continue
@@ -257,7 +271,7 @@ def new_user(bot, update):
                         bot_message = msg(lang, "USER_URL_NAME_JOIN").format(
                             join_user_name
                         )
-                        log.debug(
+                        log.info(
                             "Spammer (URL name) join message successfully removed.\n"
                             "  (Chat) - ({}).".format(chat_id)
                         )
@@ -265,7 +279,7 @@ def new_user(bot, update):
                             bot, chat_id, bot_message
                         )
                     except Exception as e:
-                        log.debug(
+                        log.error(
                             "Exception when deleting a Spammer (URL name) join "
                             "message - {}".format(str(e))
                         )
@@ -343,7 +357,7 @@ def foward_control(bot, update):
     chat_config = storage.get_chat_config(chat_id)
     user_id = message.from_user.id
 
-    log.info("Forwad control %s", message.text, exc_info=0)
+    log.info("Forwad control on %s", user_id)
     if not chat_config.enabled:
         return
 
@@ -499,19 +513,19 @@ def link_control(bot, update):
         user.save()
 
     entities = update.message.parse_entities()
-    log.info(
-        "Found {} links on {}".format(
-            len(entities.items()), update.message.from_user.name
-        )
-    )
 
     if not user.can_post_links(bot):
         # check if the links are in the white list
         in_white_list = False
         for e, link in entities.items():
-            log.info("detected {}".format(link))
+
             ext = tldextract.extract(link)
             if not storage.is_link_in_white_list(ext.registered_domain):
+                log.info(
+                    "detected unallowed link {} from {} on {}".format(
+                        link, user_id, chat_id
+                    )
+                )
                 break
         else:
             in_white_list = True
@@ -526,6 +540,11 @@ def link_control(bot, update):
             ext = tldextract.extract(link)
             if storage.is_link_in_black_list(ext.registered_domain):
                 in_black_list = True
+                log.info(
+                    "detected blacklisted link {} from {} on {}".format(
+                        link, user_id, chat_id
+                    )
+                )
                 delete_message(chat_id, user_id, msg_id, message, bot)
                 break
         if in_black_list is False:

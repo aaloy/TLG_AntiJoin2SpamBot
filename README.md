@@ -4,6 +4,14 @@ This code is a fork for the original https://github.com/J-Rios/TLG_AntiJoin2Spam
 from which I have made a re-rewite of some parts to make the code PEP8 compliant
 and more Pythonic.
 
+## News
+
+* April 2019 version:
+  * Added black and white list on links and names
+  * Do not allow a new user invite another one
+  * kicks offending users
+  * Improved logging
+
 ### Improvements
 
 * Added a configuration file config.py that the administrators could tune to add the bot parameters. Contants.py has
