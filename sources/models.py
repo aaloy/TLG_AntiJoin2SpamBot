@@ -328,7 +328,7 @@ class Storage:
         value = (user_hours_in_group >= chat_config.time_for_allow_urls) or (
             self.num_messages >= chat_config.num_messages_for_allow_urls
         )
-        if value and not self.is_verified:
+        if value and not user.is_verified:
             # if the user can post links mark it as verified
             user.verified = True
             user.save()
