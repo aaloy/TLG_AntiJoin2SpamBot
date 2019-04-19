@@ -313,7 +313,6 @@ class Storage:
         except User.DoesNotExist:
             return False
 
-
         if user.is_admin(bot) or user.is_verified:
             return True
 

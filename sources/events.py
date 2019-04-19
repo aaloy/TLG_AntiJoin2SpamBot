@@ -10,7 +10,8 @@ from utils import msg, text_msg, debug_print_tlg
 import constants as conf
 import notifications
 from exceptions import UserDoesNotExists
-#import ipdb
+
+# import ipdb
 
 # Globals ###
 
@@ -143,18 +144,18 @@ def try_to_add_a_bot_event(bot, message, join_user, chat_id):
         # If not allow users to add Bots
         if not chat_config.allow_users_to_add_bots:
             # Kick the Added Bot and notify
-            log.debug("An user has added a Bot.\n  (Chat) - ({}).".format(chat_id))
+            log.info("An user has added a Bot.\n  (Chat) - ({}).".format(chat_id))
             try:
                 bot.kickChatMember(chat_id, join_user_id)
                 bot_message = msg(lang, "USER_CANT_ADD_BOT").format(
                     message.from_user.name, join_user_alias
                 )
                 user.penalize(bot)
-                log.debug(
+                log.info(
                     "Added Bot successfully kicked.\n  (Chat) - ({}).".format(chat_id)
                 )
             except Exception as e:
-                log.debug("Exception when kicking a Bot - {}".format(str(e)))
+                log.error("Exception when kicking a Bot - {}".format(str(e)))
                 if str(e) == "Not enough rights to restrict/unrestrict chat member":
                     bot_message = msg(lang, "USER_CANT_ADD_BOT_CANT_KICK").format(
                         message.from_user.name, join_user.name
@@ -181,6 +182,7 @@ def new_user(bot, update):
         return
     message_id = message.message_id
     msg_from_user_id = message.from_user.id
+    msg_from_alias = message.from_user.name
     join_date = message.date
 
     lang = chat_config.language
@@ -226,9 +228,11 @@ def new_user(bot, update):
                     bot, msg_from_user_id, chat_id
                 ):
                     log.warn(
-                        "%s is has tried to add another user",
-                        msg_from_user_id,
-                        exc_info=1,
+                        "%s is has tried to add another user: %s on chat %s",
+                        msg_from_alias,
+                        join_user_name,
+                        chat_id,
+                        exc_info=0,
                     )
                     bot.kickChatMember(chat_id, join_user_id)
                     delete_message(chat_id, join_user_id, message_id, message, bot)
@@ -339,7 +343,7 @@ def foward_control(bot, update):
     chat_config = storage.get_chat_config(chat_id)
     user_id = message.from_user.id
 
-    log.info("Forwad control %s", message.text, exc_info=1)
+    log.info("Forwad control %s", message.text, exc_info=0)
     if not chat_config.enabled:
         return
 
