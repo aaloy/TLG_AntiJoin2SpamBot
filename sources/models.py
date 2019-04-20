@@ -104,6 +104,14 @@ class Chat(BaseModel):
         return bot.id in self.get_chat_admins_ids(bot, self.chat_id)
 
 
+class Kicked(BaseModel):
+    user_id = BigIntegerField()
+    user_name = CharField()
+    chat = ForeignKeyField(Chat, backref="users")
+    reason = CharField(default="")
+    created_date = DateTimeField(default=datetime.datetime.now)
+
+
 class User(BaseModel):
     chat = ForeignKeyField(Chat, backref="users")
     user_id = BigIntegerField()
@@ -296,6 +304,7 @@ class Storage:
                 WhiteList,
                 BlackList,
                 BlackListName,
+                Kicked,
             ]
         )
         db.connect(reuse_if_open=True)
@@ -303,6 +312,11 @@ class Storage:
 
     def clean_cache(self):
         self._db_black_list_names.cache_clear()
+
+    def kick_user(self, user_id, username, chat_id, reason):
+        chat, created = Chat.get_or_create(chat_id=chat_id)
+        kicked = Kicked(user_id=user_id, username=username, chat=chat, reason=reason)
+        kicked.save()
 
     def is_user_allowed_to_add_users(self, bot, user_id, chat_id):
         chat, created = Chat.get_or_create(chat_id=chat_id)

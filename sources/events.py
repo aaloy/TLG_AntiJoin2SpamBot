@@ -23,14 +23,20 @@ storage = models.storage
 log = logging.getLogger(__name__)
 
 
-def delete_message(chat_id, user_id, msg_id, message, bot):
+def kick_user_from_chat(bot, user_id, username, chat_id, reason):
+    storage.kick_user(user_id, username, chat_id, reason)
+    bot.kickChatMember(chat_id, user_id)
+    log.info("Added Bot successfully kicked.\n  (Chat) - ({}).".format(chat_id))
+
+
+def delete_message(chat_id, user_id, msg_id, text, bot):
     """
     Deteletes a message from a chat id.
     Saves the message for reference
     """
 
     try:
-        storage.save_message(chat_id, user_id, msg_id, message.text or "no message")
+        storage.save_message(chat_id, user_id, msg_id, text or "no message")
         bot.delete_message(chat_id, msg_id)
     except BadRequest:
         log.error("Error deleting msg {} con chat {}".format(msg_id, chat_id))
@@ -155,13 +161,8 @@ def try_to_add_a_bot_event(bot, message, join_user, chat_id):
             # Kick the Added Bot and notify
             log.info("An user has added a Bot.\n  (Chat) - ({}).".format(chat_id))
             try:
-                bot.kickChatMember(chat_id, join_user_id)
-                bot_message = msg(lang, "USER_CANT_ADD_BOT").format(
-                    message.from_user.name, join_user_alias
-                )
-                user.penalize(bot)
-                log.info(
-                    "Added Bot successfully kicked.\n  (Chat) - ({}).".format(chat_id)
+                kick_user_from_chat(
+                    bot, chat_id, join_user_id, from_user.name, "Can not add a bot"
                 )
             except Exception as e:
                 log.error("Exception when kicking a Bot - {}".format(str(e)))
@@ -209,8 +210,16 @@ def new_user(bot, update):
                 join_user_name,
                 chat_id,
             )
-            bot.kickChatMember(chat_id, join_user_id)
-            delete_message(chat_id, join_user_id, message_id, message, bot)
+            delete_message(
+                chat_id,
+                join_user_id,
+                message_id,
+                "[SPAMMER] {}".format(message.text),
+                bot,
+            )
+            kick_user_from_chat(
+                bot, join_user_id, join_user_alias, chat_id, "name blacklisted"
+            )
             continue
 
         # If the added user is not myself (this Bot)
@@ -248,8 +257,20 @@ def new_user(bot, update):
                         chat_id,
                         exc_info=0,
                     )
-                    bot.kickChatMember(chat_id, join_user_id)
-                    delete_message(chat_id, join_user_id, message_id, message, bot)
+                    delete_message(
+                        chat_id,
+                        join_user_id,
+                        message_id,
+                        "[ADDER] {}".format(message.text),
+                        bot,
+                    )
+                    kick_user_from_chat(
+                        bot,
+                        join_user_id,
+                        join_user_name,
+                        chat_id,
+                        "Tried to add another user",
+                    )
                     continue
 
             if to_register_user:
@@ -357,7 +378,7 @@ def foward_control(bot, update):
     chat_config = storage.get_chat_config(chat_id)
     user_id = message.from_user.id
 
-    log.info("Forwad control on %s", user_id)
+    log.info("Forwad control on %s %s", user_id, message.chat.username)
     if not chat_config.enabled:
         return
 
@@ -374,7 +395,13 @@ def foward_control(bot, update):
         else:
             allowed = True
     if allowed is False:
-        delete_message(chat_id, user_id, message.message_id, message, bot)
+        delete_message(
+            chat_id,
+            user_id,
+            message.message_id,
+            "[FORWARDER] {}".format(message.text),
+            bot,
+        )
 
 
 def msg_nocmd(bot, update):
@@ -393,7 +420,9 @@ def msg_nocmd(bot, update):
     msg_id = message.message_id
 
     if not check_bot_forwards(bot, update):
-        delete_message(chat_id, user_id, msg_id, message, bot)
+        delete_message(
+            chat_id, user_id, msg_id, "[FOWARDED] {}".format(message.text), bot
+        )
         return
 
     chat_config = storage.get_chat_config(chat_id)
@@ -475,7 +504,9 @@ def check_bot_forwards(bot, update):
 
     if hasattr(forward_from, "is_bot") and forward_from.is_bot:
         is_allowed = False
-        delete_message(chat_id, user_id, msg_id, message, bot)
+        delete_message(
+            chat_id, user_id, msg_id, "[FROM_BOT] {}".format(message.text), bot
+        )
     return is_allowed
 
 
@@ -532,7 +563,7 @@ def link_control(bot, update):
             log.info("All links in white list")
         if not in_white_list:
             log.info("User {} can't post links in {}".format(user_id, chat_id))
-            delete_message(chat_id, user_id, msg_id, message, bot)
+            delete_message(chat_id, user_id, msg_id, message.text, bot)
 
     else:
         in_black_list = False
@@ -545,10 +576,11 @@ def link_control(bot, update):
                         link, user_id, chat_id
                     )
                 )
-                delete_message(chat_id, user_id, msg_id, message, bot)
+                delete_message(
+                    chat_id, user_id, msg_id, "[BLACKLIST]{}".format(message.text), bot
+                )
                 break
         if in_black_list is False:
             user.num_messages = chat_config.num_messages_for_allow_urls + 1
             user.try_to_verify(chat_id, datetime.datetime(1971, 1, 1))
             user.save()
-
