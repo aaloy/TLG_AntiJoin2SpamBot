@@ -237,7 +237,7 @@ def new_user(bot, update):
                         )
                     )
                     continue
-            if to_register_user:
+            if to_register_user and (msg_from_user_id != join_user_id):
                 if not storage.is_user_allowed_to_add_users(
                     bot, msg_from_user_id, chat_id
                 ):
