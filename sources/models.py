@@ -314,6 +314,11 @@ class Storage:
         self._db_black_list_names.cache_clear()
 
     def kick_user(self, user_id, username, chat_id, reason):
+        """
+        Saves a kicked user in the database for future
+        references
+        """
+        username = username or "--"
         chat, created = Chat.get_or_create(chat_id=chat_id)
         kicked = Kicked(user_id=user_id, username=username, chat=chat, reason=reason)
         kicked.save()
