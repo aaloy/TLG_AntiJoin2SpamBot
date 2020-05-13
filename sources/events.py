@@ -345,7 +345,7 @@ def new_user(bot, update):
                     join_user_alias = "{}...".format(join_user_alias)[
                         0 : conf.MAX_USERNAME_ALIAS - 3
                     ]
-            if storage.last_addition(chat_id) > conf.VERBOSE_LIMIT:
+            if (conf.VERBOSE_LIMIT > 0) and (storage.last_addition(chat_id) > conf.VERBOSE_LIMIT):
                 notifications.tlg_send_selfdestruct_msg(
                     bot=bot,
                     chat_id=chat_id,
