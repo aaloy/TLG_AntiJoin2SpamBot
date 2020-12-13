@@ -318,10 +318,14 @@ class Storage:
         Saves a kicked user in the database for future
         references
         """
-        username = username or "--"
-        chat, created = Chat.get_or_create(chat_id=chat_id)
-        kicked = Kicked(user_id=user_id, username=username, chat=chat, reason=reason)
-        kicked.save()
+        try:
+            username = "(kicked){}".format(username)
+            log.info("kicking {}".format(username))
+            chat, created = Chat.get_or_create(chat_id=chat_id)
+            kicked = Kicked(user_id=user_id, user_name=username, chat=chat, reason=reason)
+            kicked.save()
+        except Exception:
+            log.error('Fatal error kicking a user', exc_info=True)
 
     def is_user_allowed_to_add_users(self, bot, user_id, chat_id):
         chat, created = Chat.get_or_create(chat_id=chat_id)
